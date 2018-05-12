@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
         tv = (TextView) findViewById(R.id.tv);
         btt = (Button) findViewById(R.id.btt);
 
+        /*
         btt.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
                 new SpeechToTextExample();
             }
         });
+        */
 
     }
 }
