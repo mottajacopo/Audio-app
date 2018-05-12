@@ -17,6 +17,8 @@ RecognizeUsingWebSocketsExample.java --> https://github.com/watson-developer-clo
 
 IBM Watson Developer Cloud Android SDK --> https://github.com/watson-developer-cloud/android-sdk#examples 
 
+ho creato la risorsa IBM con il mio account (ho password e username )
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SPEAKER REACOGNITION APP
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
