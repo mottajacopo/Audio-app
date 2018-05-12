@@ -5,6 +5,7 @@ Multimedia Apps and Future Internet
 SPEECH TO TEXT APP
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 IBM :
+
 Libreria usata --> https://github.com/watson-developer-cloud/java-sdk/releases/download/java-sdk-5.4.0/java-sdk-5.4.0-jar-with-dependencies.jar
 
 SDK per java :
@@ -24,6 +25,7 @@ RecognizeUsingWebSocketsExample.java --> https://github.com/watson-developer-clo
 ho creato la risorsa IBM con il mio account (ho password e username )
 
 GOOGLE : 
+
 Esempio seguito --> https://www.androidhive.info/2014/07/android-speech-to-text-tutorial/
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
