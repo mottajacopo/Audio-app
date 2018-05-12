@@ -19,7 +19,7 @@ import com.ibm.watson.developer_cloud.speech_to_text.v1.websocket.BaseRecognizeC
 public class SpeechToTextExample {
     private static CountDownLatch lock = new CountDownLatch(1);
 
-    public static void main(String[] args) throws FileNotFoundException, InterruptedException {
+    public static void main() throws FileNotFoundException, InterruptedException {
         SpeechToText service = new SpeechToText();
         service.setUsernameAndPassword("<username>", "<password>");
 
@@ -35,6 +35,7 @@ public class SpeechToTextExample {
             @Override
             public void onTranscription(SpeechRecognitionResults speechResults) {
                 System.out.println(speechResults);
+
             }
             @Override
             public void onDisconnected() {
@@ -46,7 +47,7 @@ public class SpeechToTextExample {
 }
 
 /*
-public class SpeechToTextExample {
+public class SpeechToTextExampleV2 {
 
     private final static String TAG = "Rec";
 
@@ -76,4 +77,5 @@ public class SpeechToTextExample {
         }
     }
 }
+
 */
