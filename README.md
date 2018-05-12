@@ -5,6 +5,8 @@ Multimedia Apps and Future Internet
 SPEECH TO TEXT APP
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Libreria usata --> https://github.com/watson-developer-cloud/java-sdk/releases/download/java-sdk-5.4.0/java-sdk-5.4.0-jar-with-dependencies.jar
+
 Watson APIs Java SDK --> https://github.com/watson-developer-cloud/java-sdk#gradle
 
 Speech to text watson -->https://github.com/watson-developer-cloud/java-sdk/tree/develop/speech-to-text
@@ -18,3 +20,5 @@ IBM Watson Developer Cloud Android SDK --> https://github.com/watson-developer-c
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SPEAKER REACOGNITION APP
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Libreria usata --> http://0110.be/releases/TarsosDSP/TarsosDSP-latest/TarsosDSP-Android-latest.jar
