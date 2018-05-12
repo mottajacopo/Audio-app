@@ -14,8 +14,11 @@ SDK per android :
 IBM Watson Developer Cloud Android SDK --> https://github.com/watson-developer-cloud/android-sdk#examples 
 
 Esempi : 
+
 Speech to text watson -->https://github.com/watson-developer-cloud/java-sdk/tree/develop/speech-to-text
+
 SpeechToTextExample.java --> https://github.com/watson-developer-cloud/java-sdk/blob/develop/examples/src/main/java/com/ibm/watson/developer_cloud/speech_to_text/v1/SpeechToTextExample.java
+
 RecognizeUsingWebSocketsExample.java --> https://github.com/watson-developer-cloud/java-sdk/blob/develop/examples/src/main/java/com/ibm/watson/developer_cloud/speech_to_text/v1/RecognizeUsingWebSocketsExample.java
 
 ho creato la risorsa IBM con il mio account (ho password e username )
