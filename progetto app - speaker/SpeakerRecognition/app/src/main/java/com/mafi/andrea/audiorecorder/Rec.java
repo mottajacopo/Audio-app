@@ -8,9 +8,11 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
-
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+
 
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.io.TarsosDSPAudioFormat;
@@ -18,72 +20,78 @@ import be.tarsos.dsp.mfcc.MFCC;
 import wav.WavIO;
 
 /**
- * Created by andre on 11/04/2018.
+ * Created by Giulia on 11/04/2018.
  */
 
-public class Rec extends AsyncTask <String, String, Void> {
+public class Rec extends AsyncTask <String,Void,Void>{
 
-    private final String TAG = "REC";
+    private final String TAG = "Rec";
     private final double frameLenght = 0.02;
-    private Context mContext = null;
+    private Context context = null;
 
-    private int recordingLengthInSec = 0;
-    private int Fs = 0;
+    private int recordingLenghtInSec = 0;
+    private int Fs = 0; //freq di campionamento
     private int nSamples = 0;
     private int nSamplesPerFrame = 0;
     private int nSamplesAlreadyProcessed = 0;
 
-    private short[] audioData = null;
+    private short[] audioData = null; //java codifica i campioni audio in degli short 16 bit
     private AudioRecord record = null;
 
-    public Rec(Context context, int _recordingLengthInSec, int _Fs) {
-        mContext = context;
-        recordingLengthInSec = _recordingLengthInSec;
+    public Rec(Context _context, int _recordingLenghtInSec, int _Fs)
+    {
+
+        context = _context;
+        recordingLenghtInSec = _recordingLenghtInSec;
         Fs = _Fs;
-        nSamples = recordingLengthInSec * Fs;
+        nSamples = _recordingLenghtInSec * _Fs;
         nSamplesPerFrame = (int) (frameLenght * _Fs);
 
-        audioData = new short[nSamples];
+        audioData = new short[nSamples]; //oppure passo direttamente l'array alla main activity per poi gestirlo li
 
-        record = new AudioRecord(MediaRecorder.AudioSource.MIC, Fs, AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT, 2*nSamples); //perchè gli short sono da 2 byte
+        record = new AudioRecord(MediaRecorder.AudioSource.MIC, Fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,2*nSamples);//il buffer in byte dovrà essere il doppio della dimensione dell array
+
+
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
 
-        Toast.makeText(mContext,"Start recording",Toast.LENGTH_LONG).show();
+        Toast.makeText(context,"Start Recording",Toast.LENGTH_LONG).show();
     }
 
     @Override
-    protected Void doInBackground(String... strings) {
-/*
+    protected Void doInBackground(String... strings) { //gli ingressi sono quelli passati quando faccio async.Execute//le passo sia il nome della cartella in cui salvare il file e il nome del file --> possono anche essere passati direttamente al costruttore
+
+
         String _path = strings[0];
-        String _filename = strings[1];
+        String _fileName = strings[1];
 
         String storeDir = Environment.getExternalStorageDirectory() + "/" + _path;
+        String fileDir = storeDir + "/" + _fileName + ".txt";
         File f = new File(storeDir);
 
-        if(!f.exists()){
-            if(!f.mkdir()){
-                Log.e(TAG,"Cannot create directory.");
+        if(!f.exists())
+        {
+            if(!f.mkdir())
+            {
+                Log.e(TAG,"Cannot create directory");
             }
         }
-*/
-        record.startRecording();
-        record.read(audioData, 0, nSamples);
-/*
-        byte dataByte[] = new byte[2*nSamples];
-        for(int i = 0; i < nSamples; i++){
-            dataByte[2*i] = (byte)(audioData[i] & 0x00ff);
-            dataByte[2*i + 1] = (byte)((audioData[i] >> 8) & 0x00ff);
-        }
 
-        WavIO writeWav = new WavIO(storeDir + "/" + _filename, 16, 1,
-                1, Fs, 2, 16, dataByte);
-        writeWav.save();
-*/
+        record.startRecording(); //apre il record dalla sorgente indicata con MIC
+        record.read(audioData,0,nSamples);//inizia la lettura e la finisce
+
+        //byte dataByte[] = new byte[2*nSamples];
+
+        //for (int i = 0; i< nSamples; i++)
+        //{
+
+        //  dataByte[2*i] = (byte)(audioData[i] & 0x00ff);
+        //dataByte[2*i +1] = (byte)((audioData[i] >> 8) & 0x00ff);
+        //}
+
 
         ArrayList<float[]> floatSamplesPerFrame = new ArrayList<>();
 
@@ -131,6 +139,7 @@ public class Rec extends AsyncTask <String, String, Void> {
         }
 
         ArrayList <float[]> cepCoeffPerFrame = new ArrayList<float[]>();
+        ArrayList<float[]> deltadelta = new ArrayList<float[]>();
 
 
         TarsosDSPAudioFormat af = new TarsosDSPAudioFormat(Fs,16,record.getChannelCount(),true,true);
@@ -139,20 +148,122 @@ public class Rec extends AsyncTask <String, String, Void> {
 
         for(int j =0; j< floatSamplesPerFrame.size(); j++){
 
-            ae.setFloatBuffer(floatSamplesPerFrame.get(j));
-            mfcc.process(ae);
+            ae.setFloatBuffer(floatSamplesPerFrame.get(j));//metto nel buffer di ae un blocco di campioni alla volta (singoli frame)
+            mfcc.process(ae);//calcolo mfcc sul singolo frame
 
-            cepCoeffPerFrame.add(mfcc.getMFCC());//dim effettiva degli array (i coeff) ritornati da mfcc
+            cepCoeffPerFrame.add(mfcc.getMFCC());//salvo gli mfcc in una lista di array (ciascuno da 13 elementi)
 
         }
 
+        deltadelta = computeDeltas(computeDeltas(cepCoeffPerFrame,2),2);//calcolo i delta di secondo ordine applicando due volte la funzione delta
+        printFeaturesOnFile(cepCoeffPerFrame,deltadelta,fileDir);//crea il file che va in ingresso alla svm per il training
+
+
+
+
+
+        // WavIO writeWav = new WavIO(storeDir + "/" + _fileName, 16,1,1,Fs,2,16,dataByte);
+        // writeWav.save();
+
         return null;
+
     }
 
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
+        Toast.makeText(context,"Ended Recording",Toast.LENGTH_LONG).show();
+    }
 
-        Toast.makeText(mContext,"End recording",Toast.LENGTH_LONG).show();
+    public ArrayList<float[]> computeDeltas (ArrayList<float[]> mfccCoeff, int n)
+    {
+
+        final int mfccCoeffNumber = mfccCoeff.get(0).length;
+
+        ArrayList<float[]> deltas = new ArrayList<float[]>(mfccCoeff);//inizializzo i delta con i valori degli mfcc
+        float[] deltaRaw = new float[mfccCoeffNumber];
+        float num = 0;
+        int denum = 0;
+
+
+        for( int a = 1; a <= n;a++) //calcola denominatore delta
+        {
+            denum += Math.pow(a,n);
+        }
+
+        for(int i = n; i<mfccCoeff.size()-n ; i++){ //ripete per ogni array nella lista
+
+
+            for (int j = 0; j < mfccCoeffNumber; j++) {  //ripete per ogni elemento nell array
+
+                for (int index = 1; index <= n; index++) {//calcola numeratore delta
+
+                    num += (index * (mfccCoeff.get(i + index)[j] - mfccCoeff.get(i - index)[j]));
+
+                }
+
+                deltaRaw[j] = num / (2*denum); //trova effettivamente il delta per l elemento j dell array
+
+                num = 0;//resetto il numeratore
+            }
+
+            deltas.set(i, deltaRaw);
+
+        }
+
+        return  deltas;
+    }
+
+    public void printFeaturesOnFile (ArrayList<float[]> mfcc,ArrayList<float[]> deltadelta, String _fileDir)
+    {
+        final int mfccCoeffNumber = mfcc.get(0).length;
+
+        final String label = "1"; //label che va cambiato ad ogni registrazione di un parlatore diverso
+
+        float[] temp = new float[26];
+        ArrayList<float[]> union = new ArrayList<float[]>(); //nuova lista dove ogni elemento sarà un array di float a 26 elementi per contenere sia gli mfcc che i delta
+
+        for(int j=0; j<mfcc.size(); j++){
+
+            for(int k=0; k< mfccCoeffNumber*2; k++){
+                if(k < mfccCoeffNumber){
+                    temp[k] = mfcc.get(j)[k];
+                }
+                else{
+                    temp[k] = deltadelta.get(j)[k - mfccCoeffNumber];
+                }
+            }
+
+
+            union.add(temp.clone());
+        }
+
+        try
+        {
+            FileWriter writeOnTrainingFile = new FileWriter(_fileDir,true);
+
+            for(int b=0; b < union.size(); b++){//per ogni vettore di features da 26 elementi
+
+                writeOnTrainingFile.write(label + " ");
+
+                for(int i=0; i< mfccCoeffNumber*2; i++){
+
+                    writeOnTrainingFile.write( Integer.toString(i+1) + ":" + Float.toString(union.get(b)[i]) + " ");
+                }
+
+                writeOnTrainingFile.write("\n");
+            }
+
+            writeOnTrainingFile.flush();
+            writeOnTrainingFile.close();
+
+
+
+        }
+        catch (IOException exception)
+        {
+
+            Log.e("printOnTrainingFile","Training file not exists");
+        }
     }
 }
