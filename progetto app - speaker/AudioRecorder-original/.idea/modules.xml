@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AudioRecorder-original.iml" filepath="$PROJECT_DIR$/AudioRecorder-original.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/audiolib/audiolib.iml" filepath="$PROJECT_DIR$/audiolib/audiolib.iml" />
     </modules>
   </component>
 </project>
