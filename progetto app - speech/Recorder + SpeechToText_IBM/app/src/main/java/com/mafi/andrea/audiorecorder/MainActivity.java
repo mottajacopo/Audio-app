@@ -30,12 +30,14 @@ public class MainActivity extends AppCompatActivity {
     private final String PATH = "app_records";
     private final String FILENAME = "rec.wav";
     private final int Fs = 44200;
-    private final int recordingLength = 5;
+    private final int recordingLength = 3;
 
     private TextView tv;
     private Button btt;
     private static CountDownLatch lock = new CountDownLatch(1);
     private final static String TAG = "Rec";
+    private String args[];
+    private String temp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,44 +56,40 @@ public class MainActivity extends AppCompatActivity {
 
         tv = (TextView) findViewById(R.id.tv);
         btt = (Button) findViewById(R.id.btt);
-
         btt.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                STT();
+                STT(args);
             }
         });
-
     }
 
+    private void STT(String[] args) {
 
-    private void STT() {
         SpeechToText service = new SpeechToText();
         service.setUsernameAndPassword("c492c54d-42a7-484f-97a6-0c9d163d6345", "1lvt77qALCoa");
 
         File file = new File(Environment.getExternalStorageDirectory() + "/" + PATH + "/" + FILENAME);
 
-        try{
-            FileInputStream audio = new FileInputStream(file);
+        try {
+            InputStream audio = new FileInputStream(file);
 
             RecognizeOptions options = new RecognizeOptions.Builder()
                     .audio(audio)
-                    .interimResults(true)
                     .contentType(HttpMediaType.AUDIO_WAV)
+                    .interimResults(true)
                     .build();
 
             service.recognizeUsingWebSocket(options, new BaseRecognizeCallback() {
                 @Override
-                public void onTranscription(SpeechRecognitionResults speechResults) {
-                    System.out.println(speechResults);
-                    tv.setText((CharSequence) speechResults);
+                public void onTranscription(SpeechRecognitionResults transcript) {
+                    System.out.println(transcript.getResults().get(0).toString());
+                    temp = (transcript.getResults().get(0).toString());
                 }
-                });
-        }
-        catch (FileNotFoundException e){
-            Log.e(TAG,"File not found");
+            });
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found");
         }
     }
 }
-
