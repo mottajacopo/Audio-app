@@ -32,13 +32,9 @@ public class MainActivity extends AppCompatActivity {
     private final int Fs = 44200;
     private final int recordingLength = 3;
 
-    private TextView tv;
     private Button btt;
     private static CountDownLatch lock = new CountDownLatch(1);
     private final static String TAG = "Rec";
-    private String args[];
-    private String temp;
-    private boolean result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,48 +51,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        tv = (TextView) findViewById(R.id.tv);
         btt = (Button) findViewById(R.id.btt);
         btt.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                STT(args);
+                STT stt = new STT(getApplicationContext());
+                stt.execute(PATH, FILENAME);
+
             }
         });
     }
-
-    private void STT(String[] args) {
-
-        SpeechToText service = new SpeechToText();
-        service.setUsernameAndPassword(getString(R.string.username), getString(R.string.password));
-
-        File file = new File(Environment.getExternalStorageDirectory() + "/" + PATH + "/" + FILENAME);
-
-        try {
-            InputStream audio = new FileInputStream(file);
-
-            RecognizeOptions options = new RecognizeOptions.Builder()
-                    .audio(audio)
-                    .contentType(HttpMediaType.AUDIO_WAV)
-                    .interimResults(true)
-                    .build();
-
-            service.recognizeUsingWebSocket(options, new BaseRecognizeCallback() {
-                @Override
-                public void onTranscription(SpeechRecognitionResults transcript) {
-                    //System.out.println(transcript.getResults().get(0).toString());
-                    System.out.println(transcript);
-                    long i = transcript.getResultIndex();
-                    temp = (transcript.getResults().get((int)i).toString());
-                    result = temp.contains(getString(R.string.check_phrase));
-
-                }
-            });
-            result = result;
-        } catch (FileNotFoundException e) {
-            Log.e(TAG, "File not found");
-        }
-    }
 }
-
