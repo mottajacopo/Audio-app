@@ -1,27 +1,20 @@
 package com.mafi.andrea.audiorecorder;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.AsyncTask;
-import android.os.CountDownTimer;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
-
 import com.ibm.watson.developer_cloud.http.HttpMediaType;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.SpeechToText;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
-import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResult;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResults;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.websocket.BaseRecognizeCallback;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Handler;
+
 
 public class STT extends AsyncTask <String, String, Void> {
 
@@ -29,8 +22,6 @@ public class STT extends AsyncTask <String, String, Void> {
     private Context mContext = null;
     private String temp;
     private boolean result;
-
-    List<SpeechRecognitionResult> resultList =  new ArrayList<SpeechRecognitionResult>();
 
     public STT(Context context){
         mContext = context;
@@ -67,12 +58,8 @@ public class STT extends AsyncTask <String, String, Void> {
                 public void onTranscription(SpeechRecognitionResults transcript) {
                     System.out.println(transcript);
 
-                    //resultList = transcript.
-                    //long i = transcript.getResultIndex();
-                    //temp = (transcript.getResults().get((int)i).toString());
-                   // result = resultList.contains(mContext.getString(R.string.check_phrase));
-                      temp = (transcript.getResults().get(0).toString());
-                      result = temp.contains(mContext.getString(R.string.check_phrase));
+                    temp = (transcript.getResults().get(0).toString());
+                    result = temp.contains(mContext.getString(R.string.check_phrase));
                 }
             });
             //delay 10 sec

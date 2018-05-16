@@ -27,14 +27,11 @@ import java.util.concurrent.CountDownLatch;
 public class MainActivity extends AppCompatActivity {
 
     Button bttRec = null;
+    Button bttStt = null;
     private final String PATH = "app_records";
     private final String FILENAME = "rec.wav";
     private final int Fs = 44200;
     private final int recordingLength = 3;
-
-    private Button btt;
-    private static CountDownLatch lock = new CountDownLatch(1);
-    private final static String TAG = "Rec";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,14 +48,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btt = (Button) findViewById(R.id.btt);
-        btt.setOnClickListener(new View.OnClickListener() {
+        bttStt = (Button)findViewById(R.id.bttStt);
+        bttStt.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
+
                 STT stt = new STT(getApplicationContext());
                 stt.execute(PATH, FILENAME);
-
             }
         });
     }
