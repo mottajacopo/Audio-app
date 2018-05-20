@@ -9,14 +9,18 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.io.TarsosDSPAudioFormat;
 import be.tarsos.dsp.mfcc.MFCC;
+import umich.cse.yctung.androidlibsvm.LibSVM;
 import wav.WavIO;
 
 /**
@@ -29,12 +33,14 @@ public class Rec extends AsyncTask <String,Void,Void>{
     private final double frameLenght = 0.02;
     private Context context = null;
 
+    private boolean testingOrTraining = false; //indica se si sta facendo il training o il testing -> false indica training
     private int recordingLenghtInSec = 0;
     private int Fs = 0; //freq di campionamento
     private int nSamples = 0;
     private int nSamplesPerFrame = 0;
     private int nSamplesAlreadyProcessed = 0;
 
+    private LibSVM svm = new LibSVM();
     private short[] audioData = null; //java codifica i campioni audio in degli short 16 bit
     private AudioRecord record = null;
 
@@ -65,11 +71,26 @@ public class Rec extends AsyncTask <String,Void,Void>{
     protected Void doInBackground(String... strings) { //gli ingressi sono quelli passati quando faccio async.Execute//le passo sia il nome della cartella in cui salvare il file e il nome del file --> possono anche essere passati direttamente al costruttore
 
 
+
         String _path = strings[0];
-        String _fileName = strings[1];
+        String _trainingFileName = strings[1];
+        String _scaledTrainingFileName = strings[2];
+        String _svmModelFileName = strings[3];
+        String _testingFileName = strings[4];
+        String _scaledTestingFileName = strings[5];
+        String _outputFileName = strings[6];
+
 
         String storeDir = Environment.getExternalStorageDirectory() + "/" + _path;
-        String fileDir = storeDir + "/" + _fileName + ".txt";
+
+        String trainingFilePath = storeDir + "/" + _trainingFileName;
+        String scaledTrainingFilePath = storeDir + "/" + _scaledTrainingFileName;
+        String svmModelFilePath = storeDir + "/" + _svmModelFileName;
+        String testingFilePath = storeDir + "/" + _testingFileName;
+        String scaledTestingFilePath = storeDir + "/" + _scaledTestingFileName;
+        String outputFilePath = storeDir + "/" + _outputFileName;
+
+
         File f = new File(storeDir);
 
         if(!f.exists())
@@ -112,7 +133,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
             for (int i = 0; i < nSamplesPerFrame; i++) {
 
 
-                temp[i] = audioData[i + nSamplesAlreadyProcessed -(80*(nSamplesAlreadyProcessed/nSamplesPerFrame))];
+                temp[i] = audioData[i + nSamplesAlreadyProcessed -((nSamplesPerFrame/2)*(nSamplesAlreadyProcessed/nSamplesPerFrame))];
 
 
             }
@@ -156,7 +177,24 @@ public class Rec extends AsyncTask <String,Void,Void>{
         }
 
         deltadelta = computeDeltas(computeDeltas(cepCoeffPerFrame,2),2);//calcolo i delta di secondo ordine applicando due volte la funzione delta
-        printFeaturesOnFile(cepCoeffPerFrame,deltadelta,fileDir);//crea il file che va in ingresso alla svm per il training
+
+        if(!testingOrTraining) { //se stiamo facendo il training
+
+            printFeaturesOnFile(cepCoeffPerFrame, deltadelta, trainingFilePath);//crea il file che va in ingresso alla svm per il training
+
+
+
+        }
+        else{
+
+            svm.scale(trainingFilePath, scaledTrainingFilePath);
+            svm.train("-t 2 " + scaledTrainingFilePath + " " + svmModelFilePath);
+
+            printFeaturesOnFile(cepCoeffPerFrame, deltadelta, testingFilePath);
+            svm.scale(testingFilePath,scaledTestingFilePath);
+            svm.predict(scaledTestingFilePath + " " + svmModelFilePath + " " + outputFilePath);
+
+        }
 
 
 
@@ -241,6 +279,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
         try
         {
             FileWriter writeOnTrainingFile = new FileWriter(_fileDir,true);
+
 
             for(int b=0; b < union.size(); b++){//per ogni vettore di features da 26 elementi
 
