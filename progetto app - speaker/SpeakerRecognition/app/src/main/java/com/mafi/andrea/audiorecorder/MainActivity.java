@@ -5,12 +5,15 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import libsvm.*;
+
 public class MainActivity extends AppCompatActivity {
+
 
     Button btnRec = null;
 
-    private final String PATH = "app_records";
-    private final String FILENAME = "rec.wav";
+    private final String PATH = "Speaker recognition files";
+    private final String FILENAME = "trainingData";
 
     private final int Fs = 8000;
     private final int recordingLength = 5;

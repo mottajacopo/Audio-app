@@ -14,16 +14,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 
+
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.io.TarsosDSPAudioFormat;
 import be.tarsos.dsp.mfcc.MFCC;
 import wav.WavIO;
+
+import libsvm.*;
 
 /**
  * Created by Giulia on 11/04/2018.
  */
 
 public class Rec extends AsyncTask <String,Void,Void>{
+
+
+
+
 
     private final String TAG = "Rec";
     private final double frameLenght = 0.02;
@@ -138,7 +145,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
 
         }
 
-        ArrayList <float[]> cepCoeffPerFrame = new ArrayList<float[]>();
+        ArrayList <double[]> cepCoeffPerFrame = new ArrayList<double[]>();
         ArrayList<float[]> deltadelta = new ArrayList<float[]>();
 
 
@@ -157,6 +164,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
 
         deltadelta = computeDeltas(computeDeltas(cepCoeffPerFrame,2),2);//calcolo i delta di secondo ordine applicando due volte la funzione delta
         printFeaturesOnFile(cepCoeffPerFrame,deltadelta,fileDir);//crea il file che va in ingresso alla svm per il training
+
 
 
 
