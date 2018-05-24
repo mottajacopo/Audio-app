@@ -16,7 +16,7 @@ public class MainActivity extends AppCompatActivity {
     private final String FILENAME = "trainingData";
 
     private final int Fs = 8000;
-    private final int recordingLength = 5;
+    private final int recordingLength = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

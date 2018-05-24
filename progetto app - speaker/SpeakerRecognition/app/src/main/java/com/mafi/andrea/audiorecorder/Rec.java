@@ -6,8 +6,12 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,8 +22,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
-
+import java.util.Arrays;
+import java.util.Collections;
 
 
 import be.tarsos.dsp.AudioEvent;
@@ -52,7 +58,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
     private short[] audioData = null; //java codifica i campioni audio in degli short 16 bit
     private AudioRecord record = null;
 
-    private boolean trainingOrTesting = true;
+    private boolean trainingOrTesting = false;
 
     public Rec(Context _context, int _recordingLenghtInSec, int _Fs)
     {
@@ -194,17 +200,23 @@ public class Rec extends AsyncTask <String,Void,Void>{
 
 
                 FileInputStream fileInputStream = new FileInputStream(fileDir);
-                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+                DataInputStream dataInputStream = new DataInputStream(fileInputStream);
 
                 for( int i=0; i < totalNumberOfFrames; i++){
 
-                    labels[i] = objectInputStream.readDouble();
+
+                    if(i == 499)
+                    {
+                        int s = dataInputStream.available();
+                    }
+
+                    labels[i] = dataInputStream.readDouble();
 
                     for(int j =0; j<totalNumberOfFeatures; j++){
 
                         svm_node node = new svm_node();
                         node.index = j;
-                        node.value = objectInputStream.readDouble();
+                        node.value = dataInputStream.readDouble();
 
                         dataToSvm[i][j] = node;
                     }
@@ -215,7 +227,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
                     dataToSvm[i][totalNumberOfFeatures] = finalNode;
                 }
 
-                objectInputStream.close();
+                dataInputStream.close();
                 fileInputStream.close();
 
                 svm_problem problem = new svm_problem();
@@ -223,10 +235,13 @@ public class Rec extends AsyncTask <String,Void,Void>{
                 problem.y = labels;
                 problem.l = labels.length;
 
+
                 svm_parameter parameters = new svm_parameter();
                 parameters.kernel_type = 2;
                 parameters.gamma = 0.1;
                 parameters.C = 8;
+                parameters.shrinking = 1;
+
 
                 svm_model model = svm.svm_train(problem,parameters);
 
@@ -253,15 +268,56 @@ public class Rec extends AsyncTask <String,Void,Void>{
                 }
 
 
+                //double[] result = new double[numberOfFramesPerSpeaker];
 
-                for(int i = 0; i<numberOfFramesPerSpeaker; i++){
+                //for(int i = 0; i<numberOfFramesPerSpeaker; i++){
 
-                    double result = svm.svm_predict(model,testData[i]);
+                    //result[i] = svm.svm_predict(model,testData[i]);
+
+                //}
+
+                //result = result;
+
+                int frequency;
+                int mostFrequency = 0;
+                double mostFrequentValue = 0;
+
+
+                ArrayMap<Double,String> speakers = new ArrayMap<>();
+                speakers.keySet().add(new Double(1));
+                speakers.keySet().add(new Double(2));
+                speakers.setValueAt(0,"Speaker One");
+                speakers.setValueAt(1,"Speaker Two");
+
+                ArrayList<Double> results = new ArrayList<>();
+                double res;
+
+                for(int i=0; i < numberOfFramesPerSpeaker ; i++) {
+
+
+                    res = svm.svm_predict(model, testData[i]);
+                    results.set(i,res);
                 }
+
+
+                for(int j=0; j< results.size(); j++) {
+
+                    frequency = Collections.frequency(results, new Double(j + 1));
+
+                    if(frequency >= mostFrequency){
+                        mostFrequency=frequency;
+                        mostFrequentValue = new Double(j+1);
+                    }
+                }
+
+
+                String recognizedSpeaker = speakers.get(mostFrequentValue);
+
+                int a = 0;
 
             }
             catch (IOException exception){
-
+                Log.e("Read from trainingFile","Error while reading from trainingFile");
             }
         }
 
@@ -353,21 +409,22 @@ public class Rec extends AsyncTask <String,Void,Void>{
 
 
             FileOutputStream fileOutputStream = new FileOutputStream(_fileDir,true); //controlla
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
 
 
             for(int i=0; i< union.size(); i++){
 
-                objectOutputStream.writeDouble(label);
+                dataOutputStream.writeDouble(label);
+
 
                 for(int j=0; j < totalNumberOfFeatures; j++){
 
-                    objectOutputStream.writeDouble(union.get(i)[j]);
+                    dataOutputStream.writeDouble(union.get(i)[j]);
                 }
             }
 
-            objectOutputStream.flush();
-            objectOutputStream.close();
+            dataOutputStream.flush();
+            dataOutputStream.close();
             fileOutputStream.flush();
             fileOutputStream.close();
 

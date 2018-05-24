@@ -9,7 +9,6 @@
       <module fileurl="file://$PROJECT_DIR$/audiolib/audiolib.iml" filepath="$PROJECT_DIR$/audiolib/audiolib.iml" />
       <module fileurl="file://C:\Users\Giulia\Desktop\Nuova cartella (4)\Audio-app\progetto app - speaker\SpeakerRecognition\audiolib\audiolib.iml" filepath="C:\Users\Giulia\Desktop\Nuova cartella (4)\Audio-app\progetto app - speaker\SpeakerRecognition\audiolib\audiolib.iml" />
       <module fileurl="file://$PROJECT_DIR$/libsvm/libsvm.iml" filepath="$PROJECT_DIR$/libsvm/libsvm.iml" />
-      <module fileurl="file://C:\Projects\Nuova cartella\Audio-app\progetto app - speaker\SpeakerRecognition\libsvm\libsvm.iml" filepath="C:\Projects\Nuova cartella\Audio-app\progetto app - speaker\SpeakerRecognition\libsvm\libsvm.iml" />
     </modules>
   </component>
 </project>
