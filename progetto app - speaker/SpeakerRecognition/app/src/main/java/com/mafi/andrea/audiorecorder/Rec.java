@@ -302,11 +302,11 @@ public class Rec extends AsyncTask <String,Void,Void>{
 
                 for(int j=0; j< results.size(); j++) {
 
-                    frequency = Collections.frequency(results, new Double(j + 1));
+                    frequency = Collections.frequency(results,results.get(j));
 
                     if(frequency >= mostFrequency){
                         mostFrequency=frequency;
-                        mostFrequentValue = new Double(j+1);
+                        mostFrequentValue = results.get(j);
                     }
                 }
 
