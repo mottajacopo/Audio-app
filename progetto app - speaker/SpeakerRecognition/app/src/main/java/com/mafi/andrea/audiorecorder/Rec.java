@@ -23,9 +23,13 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Array;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Map;
 
 
 import be.tarsos.dsp.AudioEvent;
@@ -35,15 +39,16 @@ import wav.WavIO;
 
 import libsvm.*;
 
+import static com.mafi.andrea.audiorecorder.SupportFunctions.computeDeltas;
+import static com.mafi.andrea.audiorecorder.SupportFunctions.convertFloatsToDoubles;
+import static com.mafi.andrea.audiorecorder.SupportFunctions.printFeaturesOnFile;
+import static com.mafi.andrea.audiorecorder.SupportFunctions.uniteAllFeaturesInOneList;
+
 /**
  * Created by Giulia on 11/04/2018.
  */
 
 public class Rec extends AsyncTask <String,Void,Void>{
-
-
-
-
 
     private final String TAG = "Rec";
     private final double frameLenght = 0.02;
@@ -91,7 +96,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
         String _fileName = strings[1];
 
         String storeDir = Environment.getExternalStorageDirectory() + "/" + _path;
-        String fileDir = storeDir + "/" + _fileName + ".txt";
+        String fileDir = storeDir + "/" + _fileName;
         File f = new File(storeDir);
 
         if(!f.exists())
@@ -187,9 +192,9 @@ public class Rec extends AsyncTask <String,Void,Void>{
         else {//caso testing
 
             int numberOfTrainingSpeakers = 2;
-            int totalNumberOfFeatures = 2*(cepCoeffPerFrame.get(0).length);
+            int totalNumberOfFeatures = 2 * (cepCoeffPerFrame.get(0).length);
             int numberOfFramesPerSpeaker = cepCoeffPerFrame.size();
-            int totalNumberOfFrames = numberOfFramesPerSpeaker*numberOfTrainingSpeakers;
+            int totalNumberOfFrames = numberOfFramesPerSpeaker * numberOfTrainingSpeakers;
 
             double[] labels = new double[totalNumberOfFrames];
 
@@ -202,17 +207,12 @@ public class Rec extends AsyncTask <String,Void,Void>{
                 FileInputStream fileInputStream = new FileInputStream(fileDir);
                 DataInputStream dataInputStream = new DataInputStream(fileInputStream);
 
-                for( int i=0; i < totalNumberOfFrames; i++){
+                for (int i = 0; i < totalNumberOfFrames; i++) {
 
-
-                    if(i == 499)
-                    {
-                        int s = dataInputStream.available();
-                    }
 
                     labels[i] = dataInputStream.readDouble();
 
-                    for(int j =0; j<totalNumberOfFeatures; j++){
+                    for (int j = 0; j < totalNumberOfFeatures; j++) {
 
                         svm_node node = new svm_node();
                         node.index = j;
@@ -240,18 +240,18 @@ public class Rec extends AsyncTask <String,Void,Void>{
                 parameters.kernel_type = 2;
                 parameters.gamma = 0.1;
                 parameters.C = 8;
-                parameters.shrinking = 1;
+
+                svm_model model = new svm_model();
+
+                model = svm.svm_train(problem, parameters);
 
 
-                svm_model model = svm.svm_train(problem,parameters);
-
-
-                ArrayList<double[]> union = uniteAllFeaturesInOneList(cepCoeffPerFrame,deltadelta);//converto i dati di test in un array di svm_node
+                ArrayList<double[]> union = uniteAllFeaturesInOneList(cepCoeffPerFrame, deltadelta);//converto i dati di test in un array di svm_node
                 svm_node[][] testData = new svm_node[numberOfFramesPerSpeaker][totalNumberOfFeatures + 1];
 
-                for(int i = 0; i< numberOfFramesPerSpeaker; i++){
+                for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
 
-                    for(int j=0; j< totalNumberOfFeatures; j++){
+                    for (int j = 0; j < totalNumberOfFeatures; j++) {
 
                         svm_node node = new svm_node();
                         node.index = j;
@@ -272,7 +272,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
 
                 //for(int i = 0; i<numberOfFramesPerSpeaker; i++){
 
-                    //result[i] = svm.svm_predict(model,testData[i]);
+                //result[i] = svm.svm_predict(model,testData[i]);
 
                 //}
 
@@ -282,30 +282,36 @@ public class Rec extends AsyncTask <String,Void,Void>{
                 int mostFrequency = 0;
                 double mostFrequentValue = 0;
 
+                //svm_model model = new svm_model();
+                //try {
+                  //  model = svm.svm_load_model(Environment.getExternalStorageDirectory() + "/wine_model.txt");
+                //} catch (Exception e) {
 
-                ArrayMap<Double,String> speakers = new ArrayMap<>();
-                speakers.keySet().add(new Double(1));
-                speakers.keySet().add(new Double(2));
-                speakers.setValueAt(0,"Speaker One");
-                speakers.setValueAt(1,"Speaker Two");
+                //}
+
+
+                ArrayMap<Double, String> speakers = new ArrayMap<>(numberOfTrainingSpeakers);
+                speakers.put(Double.valueOf(1),"Speaker One");
+                speakers.put(Double.valueOf(2),"Speaker Two");
+
 
                 ArrayList<Double> results = new ArrayList<>();
                 double res;
 
-                for(int i=0; i < numberOfFramesPerSpeaker ; i++) {
 
+                for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
 
                     res = svm.svm_predict(model, testData[i]);
-                    results.set(i,res);
+                    results.set(i, res);
                 }
 
 
-                for(int j=0; j< results.size(); j++) {
+                for (int j = 0; j < results.size(); j++) {
 
-                    frequency = Collections.frequency(results,results.get(j));
+                    frequency = Collections.frequency(results, results.get(j));
 
-                    if(frequency >= mostFrequency){
-                        mostFrequency=frequency;
+                    if (frequency >= mostFrequency) {
+                        mostFrequency = frequency;
                         mostFrequentValue = results.get(j);
                     }
                 }
@@ -313,15 +319,13 @@ public class Rec extends AsyncTask <String,Void,Void>{
 
                 String recognizedSpeaker = speakers.get(mostFrequentValue);
 
-                int a = 0;
 
+            } catch (IOException exception) {
+                Log.e("Read from trainingFile", "Error while reading from trainingFile");
             }
-            catch (IOException exception){
-                Log.e("Read from trainingFile","Error while reading from trainingFile");
-            }
+
+
         }
-
-
 
 
 
@@ -338,142 +342,6 @@ public class Rec extends AsyncTask <String,Void,Void>{
         Toast.makeText(context,"Ended Recording",Toast.LENGTH_LONG).show();
     }
 
-    public ArrayList<double[]> computeDeltas (ArrayList<double[]> mfccCoeff, int n)
-    {
-
-        final int mfccCoeffNumber = mfccCoeff.get(0).length;
-
-        ArrayList<double[]> deltas = new ArrayList<double[]>(mfccCoeff);//inizializzo i delta con i valori degli mfcc
-        double[] deltaRaw = new double[mfccCoeffNumber];
-        double num = 0;
-        int denum = 0;
 
 
-        for( int a = 1; a <= n;a++) //calcola denominatore delta
-        {
-            denum += Math.pow(a,n);
-        }
-
-        for(int i = n; i<mfccCoeff.size()-n ; i++){ //ripete per ogni array nella lista
-
-
-            for (int j = 0; j < mfccCoeffNumber; j++) {  //ripete per ogni elemento nell array
-
-                for (int index = 1; index <= n; index++) {//calcola numeratore delta
-
-                    num += (index * (mfccCoeff.get(i + index)[j] - mfccCoeff.get(i - index)[j]));
-
-                }
-
-                deltaRaw[j] = num / (2*denum); //trova effettivamente il delta per l elemento j dell array
-
-                num = 0;//resetto il numeratore
-            }
-
-            deltas.set(i, deltaRaw);
-
-        }
-
-        return  deltas;
-    }
-
-    public void printFeaturesOnFile (ArrayList<double[]> mfcc,ArrayList<double[]> deltadelta, String _fileDir)
-    {
-
-        //final String label = "1"; //label che va cambiato ad ogni registrazione di un parlatore diverso
-
-        final double label = 1;
-
-        ArrayList<double[]> union = uniteAllFeaturesInOneList(mfcc,deltadelta);
-
-        int totalNumberOfFeatures = union.get(0).length;
-
-        try
-        {
-            //FileWriter writeOnTrainingFile = new FileWriter(_fileDir,true);
-
-            //for(int b=0; b < union.size(); b++){//per ogni vettore di features da 26 elementi
-
-                //writeOnTrainingFile.write(label + " ");
-
-                //for(int i=0; i< mfccCoeffNumber*2; i++){
-
-                    //writeOnTrainingFile.write( Integer.toString(i+1) + ":" + Double.toString(union.get(b)[i]) + " ");
-                //}
-
-                //writeOnTrainingFile.write("\n");
-            //}
-
-            //writeOnTrainingFile.flush();
-            //writeOnTrainingFile.close();
-
-
-            FileOutputStream fileOutputStream = new FileOutputStream(_fileDir,true); //controlla
-            DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
-
-
-            for(int i=0; i< union.size(); i++){
-
-                dataOutputStream.writeDouble(label);
-
-
-                for(int j=0; j < totalNumberOfFeatures; j++){
-
-                    dataOutputStream.writeDouble(union.get(i)[j]);
-                }
-            }
-
-            dataOutputStream.flush();
-            dataOutputStream.close();
-            fileOutputStream.flush();
-            fileOutputStream.close();
-
-
-
-        }
-        catch (IOException exception)
-        {
-
-            Log.e("printOnTrainingFile","Training file not exists");
-        }
-    }
-
-    public static double[] convertFloatsToDoubles(float[] input)
-    {
-        if (input == null)
-        {
-            return null; // Or throw an exception - your choice
-        }
-        double[] output = new double[input.length];
-        for (int i = 0; i < input.length; i++)
-        {
-            output[i] = input[i];
-        }
-        return output;
-    }
-
-    public ArrayList<double[]> uniteAllFeaturesInOneList (ArrayList<double[]> mfcc, ArrayList<double[]> deltadelta)
-    {
-        final int mfccCoeffNumber = mfcc.get(0).length;
-
-        double[] temp = new double[2*mfccCoeffNumber];
-        ArrayList<double[]> union = new ArrayList<double[]>(); //nuova lista dove ogni elemento sarà un array di double a 26 elementi per contenere sia gli mfcc che i delta
-
-        for(int j=0; j<mfcc.size(); j++){
-
-            for(int k=0; k< mfccCoeffNumber*2; k++){
-                if(k < mfccCoeffNumber){
-                    temp[k] = mfcc.get(j)[k];
-                }
-                else{
-                    temp[k] = deltadelta.get(j)[k - mfccCoeffNumber];
-                }
-            }
-
-
-            union.add(temp.clone());
-        }
-
-        return union;
-    }
 }
