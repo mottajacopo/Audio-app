@@ -96,7 +96,7 @@ public class SupportFunctions {
 
         //final String label = "2"; //label che va cambiato ad ogni registrazione di un parlatore diverso
 
-        final double label = 2;
+        final double label = 1;
 
         ArrayList<double[]> union = uniteAllFeaturesInOneList(mfcc,deltadelta);
 

@@ -31,9 +31,9 @@ public class MainActivity extends AppCompatActivity {
                 Rec rec = new Rec(getApplicationContext(), recordingLength, Fs);
                 rec.execute(PATH, FILENAME);
 
-                Speech speech = new Speech();
-                speech.execute();
-                Speaker speaker = new Speaker();
+                //Speech speech = new Speech();
+                //speech.execute();
+                //Speaker speaker = new Speaker();
             }
         });
     }

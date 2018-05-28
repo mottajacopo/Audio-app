@@ -11,26 +11,11 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Array;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Map;
-
 
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.io.TarsosDSPAudioFormat;
@@ -48,7 +33,7 @@ import static com.mafi.andrea.audiorecorder.SupportFunctions.uniteAllFeaturesInO
  * Created by Giulia on 11/04/2018.
  */
 
-public class Rec extends AsyncTask <String,Void,Void>{
+public class Rec extends AsyncTask <String,Void,String>{
 
     private final String TAG = "Rec";
     private final double frameLenght = 0.02;
@@ -89,7 +74,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
     }
 
     @Override
-    protected Void doInBackground(String... strings) { //gli ingressi sono quelli passati quando faccio async.Execute//le passo sia il nome della cartella in cui salvare il file e il nome del file --> possono anche essere passati direttamente al costruttore
+    protected String doInBackground(String... strings) { //gli ingressi sono quelli passati quando faccio async.Execute//le passo sia il nome della cartella in cui salvare il file e il nome del file --> possono anche essere passati direttamente al costruttore
 
 
         String _path = strings[0];
@@ -302,7 +287,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
                 for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
 
                     res = svm.svm_predict(model, testData[i]);
-                    results.set(i, res);
+                    results.add(i,res);
                 }
 
 
@@ -318,6 +303,7 @@ public class Rec extends AsyncTask <String,Void,Void>{
 
 
                 String recognizedSpeaker = speakers.get(mostFrequentValue);
+                return  recognizedSpeaker;
 
 
             } catch (IOException exception) {
@@ -337,9 +323,10 @@ public class Rec extends AsyncTask <String,Void,Void>{
     }
 
     @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
-        Toast.makeText(context,"Ended Recording",Toast.LENGTH_LONG).show();
+    protected void onPostExecute(String string) {
+        super.onPostExecute(string);
+        //Toast.makeText(context,"Ended Recording",Toast.LENGTH_LONG).show();
+        Toast.makeText(context, string,Toast.LENGTH_LONG);
     }
 
 
