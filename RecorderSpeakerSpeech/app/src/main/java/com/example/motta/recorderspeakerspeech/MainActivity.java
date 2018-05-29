@@ -26,8 +26,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Rec rec = new Rec(getApplicationContext(), recordingLength, Fs);
-                rec.execute(PATH, FILENAME , FILENAME2);
+                SpeakerRecognition speaker = new SpeakerRecognition(getApplicationContext(), recordingLength, Fs);
+                speaker.execute(PATH, FILENAME , FILENAME2);
             }
         });
 
@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                STT stt = new STT(getApplicationContext());
-                stt.execute(PATH, FILENAME2);
+                SpeechRecognition speech = new SpeechRecognition(getApplicationContext());
+                speech.execute(PATH, FILENAME2);
             }
         });
 

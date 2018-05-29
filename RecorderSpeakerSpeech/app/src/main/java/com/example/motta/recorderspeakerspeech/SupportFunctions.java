@@ -155,13 +155,25 @@ public class SupportFunctions {
             fileOutputStream.flush();
             fileOutputStream.close();
 
-
-
         }
         catch (IOException exception)
         {
 
             Log.e("printOnTrainingFile","Training file not exists");
         }
+    }
+
+    public static void saveWavFile (int Fs , int nSamples , short[] audioData , String _fileName , String storeDir)
+    {
+        byte dataByte[] = new byte[2*nSamples];
+
+        for (int i = 0; i< nSamples; i++)
+        {
+            dataByte[2*i] = (byte)(audioData[i] & 0x00ff);
+            dataByte[2*i +1] = (byte)((audioData[i] >> 8) & 0x00ff);
+        }
+
+        WavIO writeWav = new WavIO(storeDir + "/" + _fileName, 16,1,1,Fs,2,16,dataByte);
+        writeWav.save();
     }
 }
