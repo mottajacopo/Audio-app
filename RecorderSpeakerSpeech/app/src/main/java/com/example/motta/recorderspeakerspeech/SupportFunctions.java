@@ -13,6 +13,11 @@ import java.util.ArrayList;
 
 public class SupportFunctions {
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//funzione per il calcolo dei delta degli mfcc
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     public static ArrayList<double[]> computeDeltas (ArrayList<double[]> mfccCoeff, int n)
     {
 
@@ -52,6 +57,11 @@ public class SupportFunctions {
         return  deltas;
     }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//funzione per conversione float to double
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     public static double[] convertFloatsToDoubles(float[] input)
     {
         if (input == null)
@@ -65,6 +75,11 @@ public class SupportFunctions {
         }
         return output;
     }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//fuzione per unire features e delta del parlatore da riconoscere in una lista (utilizzata  per creare poi gli svm_node)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     public static ArrayList<double[]> uniteAllFeaturesInOneList (ArrayList<double[]> mfcc, ArrayList<double[]> deltadelta)
     {
@@ -91,6 +106,11 @@ public class SupportFunctions {
         return union;
     }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//funzione che salva il file contenente le features e i delta dei parlatori autorizzati (utilizzata per creare svm _node e il modello)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     public static void printFeaturesOnFile (ArrayList<double[]> mfcc, ArrayList<double[]> deltadelta, String _fileDir)
     {
 
@@ -101,17 +121,17 @@ public class SupportFunctions {
         ArrayList<double[]> union = uniteAllFeaturesInOneList(mfcc,deltadelta);
 
         int totalNumberOfFeatures = union.get(0).length;
-
-        /*DecimalFormatSymbols symbol = new DecimalFormatSymbols();
+/*
+        DecimalFormatSymbols symbol = new DecimalFormatSymbols();
         symbol.setDecimalSeparator('.');
         DecimalFormat format = new DecimalFormat("#.0000000",symbol);
         float value;
         String stringValue;
 */
-
         try
         {
-           /* FileWriter writeOnTrainingFile = new FileWriter(_fileDir,true);
+/*
+           FileWriter writeOnTrainingFile = new FileWriter(_fileDir,true);
 
             for(int b=0; b < union.size(); b++){//per ogni vettore di features da 26 elementi
 
@@ -133,7 +153,6 @@ public class SupportFunctions {
 
             writeOnTrainingFile.flush();
             writeOnTrainingFile.close();
-
 */
             FileOutputStream fileOutputStream = new FileOutputStream(_fileDir,true); //controlla
             DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
@@ -162,6 +181,11 @@ public class SupportFunctions {
             Log.e("printOnTrainingFile","Training file not exists");
         }
     }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//funzione per salvare il file .wav del parlatore (utilizzata per il riconoscimento della frase )
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     public static void saveWavFile (int Fs , int nSamples , short[] audioData , String _fileName , String storeDir)
     {

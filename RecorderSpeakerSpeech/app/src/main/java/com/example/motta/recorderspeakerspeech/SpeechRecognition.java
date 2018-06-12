@@ -37,12 +37,22 @@ public class SpeechRecognition extends AsyncTask<String, String, Void>  {
     @Override
     protected Void doInBackground(String... strings) {
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//collegamento al servizio IBM per lo speech to text tramite username e password
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
         SpeechToText service = new SpeechToText();
         service.setUsernameAndPassword(mContext.getString(R.string.username), mContext.getString(R.string.password));
 
         String _path = strings[0];
         String _filename = strings[1];
         File file = new File(Environment.getExternalStorageDirectory() + "/" + _path + "/" + _filename);
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//lettura e invo del file .wav come InputStream e attesa della risposta dal servizio
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         try{
             InputStream audio = new FileInputStream(file);
@@ -57,12 +67,16 @@ public class SpeechRecognition extends AsyncTask<String, String, Void>  {
                 @Override
                 public void onTranscription(SpeechRecognitionResults transcript) {
                     System.out.println(transcript);
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//controllo che il risultato ricevuto contenga la frase corretta
 
                     temp = (transcript.getResults().get(0).toString());
                     result = temp.contains(mContext.getString(R.string.check_phrase));
                 }
             });
-            //delay 10 sec
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//delay 10 sec  (ritardo necessario al comletamento della verifica)
             Thread.currentThread().sleep(10000);
         }
         catch (FileNotFoundException e){
