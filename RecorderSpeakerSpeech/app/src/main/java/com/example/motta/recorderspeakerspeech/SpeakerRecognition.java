@@ -66,7 +66,7 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
     protected void onPreExecute() {
         super.onPreExecute();
 
-        Toast.makeText(context,"Start Recording", Toast.LENGTH_LONG).show();
+        Toast.makeText(context,"Start Recording", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -213,7 +213,7 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 //settaggio dei parametri della SVM (SVM_PARAMETER)
 
                 svm_parameter parameters = new svm_parameter();
-                parameters.kernel_type = 2; //tipi di kernel della SVM (0-lineare-1-polinomiale-2-gaussiano)
+                parameters.kernel_type = 1; //tipi di kernel della SVM (0-lineare-1-polinomiale-2-gaussiano)
                 parameters.gamma = 0.03; // gamma tipicamente vale 1/(numero di features) ; nostro caso 1/26
                 parameters.C = 5;
                 parameters.svm_type = 1;
@@ -299,8 +299,8 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
     protected void onPostExecute(String string) {
         super.onPostExecute(string);
         //Toast.makeText(context,"Ended Recording",Toast.LENGTH_SHORT).show();
-        Toast.makeText(context,AutorizedSpeaker,Toast.LENGTH_LONG).show();
-        Toast.makeText(context, string, Toast.LENGTH_LONG);
+        Toast.makeText(context,AutorizedSpeaker,Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, string, Toast.LENGTH_SHORT);
     }
 
 }

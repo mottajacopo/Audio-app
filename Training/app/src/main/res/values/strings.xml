@@ -1,7 +1,0 @@
-<resources>
-    <string name="app_name">Training</string>
-    <string name="username">c492c54d-42a7-484f-97a6-0c9d163d6345</string>
-    <string name="password">1lvt77qALCoa</string>
-    <string name="url">https://stream.watsonplatform.net/speech-to-text/api</string>
-    <string name="check_phrase">open the door please</string>
-</resources>
