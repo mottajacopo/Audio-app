@@ -10,9 +10,11 @@ import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +50,7 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 
     private boolean trainingOrTesting = false;
     private String AutorizedSpeaker;
+    private int accuracy ;
 
     public SpeakerRecognition(Context _context, int _recordingLenghtInSec, int _Fs)
     {
@@ -213,11 +216,12 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 //settaggio dei parametri della SVM (SVM_PARAMETER)
 
                 svm_parameter parameters = new svm_parameter();
-                parameters.kernel_type = 1; //tipi di kernel della SVM (0-lineare-1-polinomiale-2-gaussiano)
+                parameters.kernel_type = 2; //tipi di kernel della SVM (0-lineare-1-polinomiale-2-gaussiano)
                 parameters.gamma = 0.03; // gamma tipicamente vale 1/(numero di features) ; nostro caso 1/26
                 parameters.C = 5;
                 parameters.svm_type = 1;
                 parameters.nu = 0.03;
+                parameters.eps = Math.pow(10,-8);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -225,9 +229,11 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 
                 svm_model model;
                 model = svm.svm_train(problem, parameters);// generazione del modello
-
+                //model = svm.svm_load_model(new BufferedReader(new FileReader(storeDir + "/model.txt")));
+                //svm.svm_save_model("model_1.txt" , model);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //generazione degli svm node del parlatore da riconoscere (SVM_NODE)
+
 
                 ArrayList<double[]> union = uniteAllFeaturesInOneList(cepCoeffPerFrame, deltadelta);//converto i dati di test in un array di svm_node
                 svm_node[][] testData = new svm_node[numberOfFramesPerSpeaker][totalNumberOfFeatures + 1];
@@ -249,6 +255,33 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 
                     testData[i][totalNumberOfFeatures] = finalNode;
                 }
+
+/*
+                svm_node[][] testData = new svm_node[500][3];
+                String[] splitted = new String[2];
+
+                FileReader readTest = new FileReader(storeDir + "/test_data_final.txt");
+                BufferedReader bufferReader = new BufferedReader(readTest);
+
+                for(int i=0 ; i<500; i++){
+
+                    splitted = bufferReader.readLine().split(",");
+                    for(int j=0;j<2;j++){
+
+                        svm_node test_node = new svm_node();
+
+                        test_node.index = j;
+                        test_node.value = Double.parseDouble(splitted[j]);
+                        testData[i][j] = test_node;
+                    }
+
+                    svm_node final_node = new svm_node();
+                    final_node.index = -1;
+                    final_node.value = 0;
+                    testData[i][2] = final_node;
+
+                }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //fase di predizione (SVM_PREDICT)
@@ -279,6 +312,7 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
                     if (frequency >= mostFrequency) {
                         mostFrequency = frequency;
                         mostFrequentValue = results.get(j);
+                        accuracy = (frequency*100)/numberOfFramesPerSpeaker;
                     }
                 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +333,7 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
     protected void onPostExecute(String string) {
         super.onPostExecute(string);
         //Toast.makeText(context,"Ended Recording",Toast.LENGTH_SHORT).show();
-        Toast.makeText(context,AutorizedSpeaker,Toast.LENGTH_SHORT).show();
+        Toast.makeText(context,AutorizedSpeaker + " " + accuracy + "%",Toast.LENGTH_SHORT).show();
         Toast.makeText(context, string, Toast.LENGTH_SHORT);
     }
 
