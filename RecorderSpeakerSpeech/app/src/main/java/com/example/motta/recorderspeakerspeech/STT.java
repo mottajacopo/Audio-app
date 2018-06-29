@@ -17,13 +17,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
-public class SpeechRecognition extends AsyncTask<String, String, Void>  {
+
+public class STT extends AsyncTask<String, String, Void> {
+
     private static final String TAG = "STT";
     private Context mContext;
     private String temp;
     private boolean result;
 
-    public SpeechRecognition(Context context){
+    public STT(Context context){
         mContext = context;
     }
 
@@ -58,8 +60,16 @@ public class SpeechRecognition extends AsyncTask<String, String, Void>  {
                 public void onTranscription(SpeechRecognitionResults transcript) {
                     System.out.println(transcript);
 
-                    temp = (transcript.getResults().get(0).toString());
-                    result = temp.contains(mContext.getString(R.string.check_phrase));
+                    boolean result = false;
+
+                    for(int i =0; i< transcript.getResults().size(); i++)
+                    {
+                        temp = transcript.getResults().get(i).toString();
+                        if(temp.contains("open the door please")){
+                            result = true;
+                        }
+                    }
+
                 }
             });
             //delay 10 sec
@@ -85,3 +95,4 @@ public class SpeechRecognition extends AsyncTask<String, String, Void>  {
         }
     }
 }
+

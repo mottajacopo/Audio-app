@@ -10,9 +10,11 @@ import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,14 +31,20 @@ import libsvm.svm_problem;
 import  static com.example.motta.recorderspeakerspeech.SupportFunctions.computeDeltas;
 import  static com.example.motta.recorderspeakerspeech.SupportFunctions.convertFloatsToDoubles;
 import  static com.example.motta.recorderspeakerspeech.SupportFunctions.printFeaturesOnFile;
+import static com.example.motta.recorderspeakerspeech.SupportFunctions.readTestDataFromFormatFile;
 import  static com.example.motta.recorderspeakerspeech.SupportFunctions.uniteAllFeaturesInOneList;
-import  static com.example.motta.recorderspeakerspeech.SupportFunctions.saveWavFile;
+import  static com.example.motta.recorderspeakerspeech.SupportFunctions.printFeaturesOnFileFormat;
+/**
+ * Created by Giulia on 11/04/2018.
+ */
 
-public class SpeakerRecognition extends AsyncTask<String,Void,String> {
+public class Rec extends AsyncTask<String,Void,String> {
+
     private final String TAG = "Rec";
     private final double frameLenght = 0.02;
     private Context context = null;
 
+    private int speaker = 0;
     private int recordingLenghtInSec = 0;
     private int Fs = 0; //freq di campionamento
     private int nSamples = 0;
@@ -48,9 +56,10 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 
     private boolean trainingOrTesting = false;
 
-    public SpeakerRecognition(Context _context, int _recordingLenghtInSec, int _Fs)
+    public Rec(Context _context, int _recordingLenghtInSec, int _Fs,int _speaker)
     {
 
+        speaker = _speaker;
         context = _context;
         recordingLenghtInSec = _recordingLenghtInSec;
         Fs = _Fs;
@@ -92,12 +101,22 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 
         record.startRecording(); //apre il record dalla sorgente indicata con MIC
         record.read(audioData,0,nSamples);//inizia la lettura e la finisce
+        record.stop();
+        record.release();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //save .wav file
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        byte dataByte[] = new byte[2*nSamples];
 
-        saveWavFile(Fs , nSamples , audioData , _fileName2 , storeDir);
+        for (int i = 0; i< nSamples; i++)
+        {
+            dataByte[2*i] = (byte)(audioData[i] & 0x00ff);
+            dataByte[2*i +1] = (byte)((audioData[i] >> 8) & 0x00ff);
+        }
+
+        WavIO writeWav = new WavIO(storeDir + "/" + _fileName2, 16,1,1,Fs,2,16,dataByte);
+        writeWav.save();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //framing audio data
@@ -150,10 +169,76 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 //print features on file
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        String numberOfTest = strings[3];
+        int numberOfTrainingSpeakers = 2;
+        int totalNumberOfFeatures = 2 * (cepCoeffPerFrame.get(0).length);
+        int numberOfFramesPerSpeaker = cepCoeffPerFrame.size();
+        int totalNumberOfFrames = numberOfFramesPerSpeaker * numberOfTrainingSpeakers;
+
         if(trainingOrTesting) {//caso training
 
-            printFeaturesOnFile(cepCoeffPerFrame, deltadelta, fileDir);//crea il file che va in ingresso alla svm per il training
+           /* printFeaturesOnFile(cepCoeffPerFrame, deltadelta, fileDir,speaker);//crea il file che va in ingresso alla svm per il training
 
+            printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, fileDir + "WithFormat.txt",speaker);
+*/
+
+            ////printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, fileDir + "WithFormat" + String.valueOf(speaker) + ".txt",speaker);
+
+
+
+            ArrayList<double[]> union = uniteAllFeaturesInOneList(cepCoeffPerFrame, deltadelta);//converto i dati di test in un array di svm_node
+            double[] labels = new double[numberOfFramesPerSpeaker];
+            svm_node[][] data = new svm_node[numberOfFramesPerSpeaker][totalNumberOfFeatures + 1];
+
+
+            for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
+
+                labels[i] = (double) speaker;
+
+                for (int j = 0; j < totalNumberOfFeatures; j++) {
+
+                    svm_node node = new svm_node();
+                    node.index = j;
+                    node.value = union.get(i)[j];
+
+                    data[i][j] = node;
+                }
+
+                svm_node finalNode = new svm_node();
+                finalNode.index = -1;
+                finalNode.value = 0;
+
+                data[i][totalNumberOfFeatures] = finalNode;
+            }
+
+
+            //data = readTestDataFromFormatFile(storeDir + "/trainingDataWithFormat2.txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
+
+
+            svm_problem problem = new svm_problem();
+            problem.x = data;
+            problem.y = labels;
+            problem.l = labels.length;
+
+
+            svm_parameter parameters = new svm_parameter();
+            parameters.kernel_type = 2;
+            parameters.svm_type = 2;
+            parameters.gamma = 0.00008;
+            parameters.C = 1;
+            parameters.nu = 0.003;
+            parameters.eps = Math.pow(10,-7);
+
+            svm_model model = svm.svm_train(problem,parameters);
+
+            try {
+                svm.svm_save_model(storeDir + "/modelSpeaker" + String.valueOf(speaker) + ".txt",model);
+            }
+            catch (IOException excepion){
+
+            }
+
+            int a = 0;
         }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,10 +247,7 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 
         else {//caso testing
 
-            int numberOfTrainingSpeakers = 2;
-            int totalNumberOfFeatures = 2 * (cepCoeffPerFrame.get(0).length);
-            int numberOfFramesPerSpeaker = cepCoeffPerFrame.size();
-            int totalNumberOfFrames = numberOfFramesPerSpeaker * numberOfTrainingSpeakers;
+
 
             double[] labels = new double[totalNumberOfFrames];
 
@@ -173,7 +255,7 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
             svm_node[][] dataToSvm = new svm_node[totalNumberOfFrames][totalNumberOfFeatures + 1];
 
             try {
-                FileInputStream fileInputStream = new FileInputStream(fileDir);
+                /*FileInputStream fileInputStream = new FileInputStream(fileDir);
                 DataInputStream dataInputStream = new DataInputStream(fileInputStream);
 
                 for (int i = 0; i < totalNumberOfFrames; i++) {
@@ -198,6 +280,7 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 
                 dataInputStream.close();
                 fileInputStream.close();
+                */
 
                 svm_problem problem = new svm_problem();
                 problem.x = dataToSvm;
@@ -207,13 +290,29 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
 
                 svm_parameter parameters = new svm_parameter();
                 parameters.kernel_type = 2;
-                parameters.gamma = 0.1;
-                parameters.C = 8;
+                parameters.gamma = 0.003;
+                parameters.C = 1;
+                parameters.nu = 0.038;
+                parameters.eps = Math.pow(10,-7);
+
 
                 svm_model model = new svm_model();
 
-                model = svm.svm_train(problem, parameters);
 
+                //model = svm.svm_train(problem, parameters);
+                //model = svm.svm_load_model(new BufferedReader(new FileReader(storeDir + "/model.txt")));
+/*
+                svm_model modelOne;
+                svm_model modelTwo;
+                modelOne = svm.svm_load_model(new BufferedReader(new FileReader(storeDir + "/modelSpeaker1.txt")));
+                modelTwo = svm.svm_load_model(new BufferedReader(new FileReader(storeDir + "/modelSpeaker2.txt")));
+
+                //svm.svm_save_model(storeDir + "/model.txt",model);
+
+*/
+                printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, storeDir + "/testDataFormatMJ" + numberOfTest + ".txt",speaker);
+
+/*
                 ArrayList<double[]> union = uniteAllFeaturesInOneList(cepCoeffPerFrame, deltadelta);//converto i dati di test in un array di svm_node
                 svm_node[][] testData = new svm_node[numberOfFramesPerSpeaker][totalNumberOfFeatures + 1];
 
@@ -235,6 +334,8 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
                     testData[i][totalNumberOfFeatures] = finalNode;
                 }
 
+                //testData = readTestDataFromFormatFile(storeDir + "/testDataFormat" + numberOfTest + ".txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
+
                 int frequency;
                 int mostFrequency = 0;
                 double mostFrequentValue = 0;
@@ -247,13 +348,26 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
                 ArrayList<Double> results = new ArrayList<>();
                 double res;
 
+                ArrayList<ArrayList<Double>> resultsList = new ArrayList<>();
+                ArrayList<Double> resultOne = new ArrayList<>();
+                ArrayList<Double> resultTwo = new ArrayList<>();
+
+                resultsList.add(0,resultOne);
+                resultsList.add(1,resultTwo);
+
                 for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
 
-                    res = svm.svm_predict(model, testData[i]);
-                    results.add(i,res);
+                    //res = svm.svm_predict(model, testData[i]);
+                    //results.add(i,res);
+
+                    res = svm.svm_predict(modelOne,testData[i]);
+                    resultOne.add(i,res);
+
+                    res = svm.svm_predict(modelTwo,testData[i]);
+                    resultTwo.add(i,res);
                 }
 
-                for (int j = 0; j < results.size(); j++) {
+                /*for (int j = 0; j < results.size(); j++) {
 
                     frequency = Collections.frequency(results, results.get(j));
 
@@ -262,11 +376,50 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
                         mostFrequentValue = results.get(j);
                     }
                 }
+               */
+ /*               int speaker = 0;
+                int maxFrequency = 0;
+                int frequencyForList = 0;
 
-                String recognizedSpeaker = speakers.get(mostFrequentValue);
+
+                for(int i = 0; i< resultsList.size(); i++){
+
+                    frequencyForList = Collections.frequency(resultsList.get(i), new Double(1));
+
+                    if( frequencyForList >= maxFrequency ){
+                        maxFrequency = frequencyForList;
+                        speaker = i;
+                    }
+                }
+
+                ArrayList<String> names = new ArrayList<>();
+                names.add(0, "Speaker One");
+                names.add(1,"Speaker Two");
+
+                String recognizedSpeaker;
+
+                if(maxFrequency >= 0.5*numberOfFramesPerSpeaker) {
+                    recognizedSpeaker = names.get(speaker);
+                }
+                else{
+                    recognizedSpeaker = "Unknown";
+                }
+
+                return recognizedSpeaker;
+                /////////////////////////////////////////////////
+
+                /*if(mostFrequency >= 0.75*results.size()) {
+
+                    recognizedSpeaker = speakers.get(mostFrequentValue);
+                }
+                else{
+                    recognizedSpeaker = "Unknown";
+                }
                 return  recognizedSpeaker;
 
-            } catch (IOException exception) {
+                */
+ /**/
+                }catch (Exception exception) {
                 Log.e("Read from trainingFile", "Error while reading from trainingFile");
             }
         }
@@ -277,7 +430,9 @@ public class SpeakerRecognition extends AsyncTask<String,Void,String> {
     protected void onPostExecute(String string) {
         super.onPostExecute(string);
         //Toast.makeText(context,"Ended Recording",Toast.LENGTH_LONG).show();
-        Toast.makeText(context, string, Toast.LENGTH_LONG);
+        Toast.makeText(context, string, Toast.LENGTH_LONG).show();
     }
+
+
 
 }
