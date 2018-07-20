@@ -37,8 +37,10 @@ public class MainActivity extends AppCompatActivity {
 
                 if(boxOne.isChecked())
                     speaker = 1;
-                else
+                else if(boxTwo.isChecked())
                     speaker = 2;
+                else
+                    speaker = 3;
 
                 Rec rec = new Rec(getApplicationContext(), recordingLength, Fs,speaker);
                 rec.execute(PATH, FILENAME , FILENAME2,numberOfTest);

@@ -170,7 +170,7 @@ public class Rec extends AsyncTask<String,Void,String> {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         String numberOfTest = strings[3];
-        int numberOfTrainingSpeakers = 2;
+        int numberOfTrainingSpeakers = 3;
         int totalNumberOfFeatures = 2 * (cepCoeffPerFrame.get(0).length);
         int numberOfFramesPerSpeaker = cepCoeffPerFrame.size();
         int totalNumberOfFrames = numberOfFramesPerSpeaker * numberOfTrainingSpeakers;
@@ -211,6 +211,8 @@ public class Rec extends AsyncTask<String,Void,String> {
                 data[i][totalNumberOfFeatures] = finalNode;
             }
 
+
+            printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta,storeDir + "/testDataFormat" + numberOfTest + ".txt",speaker);
 
             //data = readTestDataFromFormatFile(storeDir + "/trainingDataWithFormat2.txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
             data = readTestDataFromFormatFile(storeDir + "/testDataFormatMJ1.txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
@@ -352,20 +354,19 @@ public class Rec extends AsyncTask<String,Void,String> {
                 //int mostFrequency = 0;
                 //double mostFrequentValue = 0;
 
-                ArrayMap<Double, String> speakers = new ArrayMap<>(numberOfTrainingSpeakers);
-                speakers.put(Double.valueOf(1),"Speaker One");
-                speakers.put(Double.valueOf(2),"Speaker Two");
+                ////ArrayMap<Double, String> speakers = new ArrayMap<>(numberOfTrainingSpeakers);
+                ////speakers.put(Double.valueOf(1),"Speaker One");
+                ////speakers.put(Double.valueOf(2),"Speaker Two");
 
 
-                ArrayList<Double> results = new ArrayList<>();
+                //ArrayList<Double> results = new ArrayList<>();
                 double res;
 
                 ArrayList<ArrayList<Double>> resultsList = new ArrayList<>();
-                ArrayList<Double> resultOne = new ArrayList<>();
-                ArrayList<Double> resultTwo = new ArrayList<>();
-
-                resultsList.add(0,resultOne);
-                resultsList.add(1,resultTwo);
+                //ArrayList<Double> resultOne = new ArrayList<>();
+                //ArrayList<Double> resultTwo = new ArrayList<>();
+                //resultsList.add(0,resultOne);
+                //resultsList.add(1,resultTwo);
 
                 /**/
                 for(int i = 0; i< numberOfTrainingSpeakers; i++)////////////////////
@@ -379,11 +380,11 @@ public class Rec extends AsyncTask<String,Void,String> {
                     //res = svm.svm_predict(model, testData[i]);
                     //results.add(i,res);
 
-                    res = svm.svm_predict(modelOne,testData[i]);
-                    resultOne.add(i,res);
+                    ////res = svm.svm_predict(modelOne,testData[i]);
+                    ////resultOne.add(i,res);
 
-                    res = svm.svm_predict(modelTwo,testData[i]);
-                    resultTwo.add(i,res);
+                    ////res = svm.svm_predict(modelTwo,testData[i]);
+                    ////resultTwo.add(i,res);
 
                     /**/
 
@@ -424,6 +425,7 @@ public class Rec extends AsyncTask<String,Void,String> {
                 ArrayList<String> names = new ArrayList<>();
                 names.add(0, "Speaker One");
                 names.add(1,"Speaker Two");
+                names.add(2,"Speaker Three");
 
                 String recognizedSpeaker;
                 double percentOfAccuracy = 0.8;
