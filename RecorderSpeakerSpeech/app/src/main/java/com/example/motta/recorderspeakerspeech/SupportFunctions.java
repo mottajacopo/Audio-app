@@ -13,6 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import libsvm.svm;
 import libsvm.svm_node;
@@ -302,6 +303,160 @@ public class SupportFunctions {
             return null;
         }
 
+    }
+
+    public static svm_node[][] scaleTestData(svm_node[][] testDataToBeScaled,int speaker,String storeDir)
+    {
+        String fileDir = storeDir + "/normValues.txt";
+
+        int numberOfFeatures = testDataToBeScaled[0].length -1;
+        int numberOfFrames = testDataToBeScaled.length;
+        double[][] normValues = new double[2][numberOfFeatures];
+
+        svm_node[][] scaledData = new svm_node[numberOfFrames][numberOfFeatures + 1];
+
+        for(int i = 0; i< numberOfFrames; i++)
+        {
+            scaledData[i][numberOfFeatures] = testDataToBeScaled[i][numberOfFeatures]; //copia i nodi finali che non vanno scalati
+        }
+
+        normValues = readNormValFromFile(fileDir,speaker,numberOfFeatures);
+
+        for(int i=0; i< numberOfFeatures; i++)
+        {
+            for(int j = 0; j< numberOfFrames; j++)
+            {
+                //scaledData[j][i].index = i;
+                //scaledData[j][i].value = (testDataToBeScaled[j][i].value - normValues[1][i])/(normValues[0][i] - normValues[1][i]);
+
+                svm_node node = new svm_node();
+                node.index = i;
+                node.value = (testDataToBeScaled[j][i].value - normValues[1][i])/(normValues[0][i] - normValues[1][i]);
+                scaledData[j][i] = node;
+            }
+        }
+
+        return scaledData;
+    }
+
+    public static svm_node[][] scaleTrainingData(svm_node[][] trainingDataToBeScaled,String storeDir,int speaker)
+    {
+        String normValFileDir = storeDir + "/normValues.txt";
+
+        int numberOfFeatures = trainingDataToBeScaled[0].length -1;
+        int numberOfFrames = trainingDataToBeScaled.length;
+        double[][] normValues = new double[2][numberOfFeatures];
+
+        svm_node[][] scaledData = new svm_node[numberOfFrames][numberOfFeatures + 1];
+
+        for(int i = 0; i< numberOfFrames; i++)
+        {
+            scaledData[i][numberOfFeatures] = trainingDataToBeScaled[i][numberOfFeatures]; //copia i nodi finali che non vanno scalati
+        }
+
+        ArrayList<Double> values = new ArrayList<>(numberOfFrames);
+        double maxValue;
+        double minValue;
+
+        for(int i=0;i<numberOfFeatures;i++)
+        {
+            values.clear();
+
+            for (int j=0;j<numberOfFrames;j++)
+            {
+                values.add(j,trainingDataToBeScaled[j][i].value);
+            }
+
+            maxValue = Collections.max(values);
+            minValue = Collections.min(values);
+
+            normValues[0][i] = maxValue;
+            normValues[1][i] = minValue;
+
+            for(int k =0; k< numberOfFrames;k++)
+            {
+                //scaledData[k][i].index = i;
+                //scaledData[k][i].value = (trainingDataToBeScaled[k][i].value - minValue) / (maxValue - minValue);
+
+                svm_node node = new svm_node();
+                node.index = i;
+                node.value = (trainingDataToBeScaled[k][i].value - minValue)/(maxValue-minValue);
+                scaledData[k][i] = node;
+            }
+        }
+
+        printNormValOnFile(normValFileDir,speaker,normValues);
+        return scaledData;
+    }
+
+    private static void printNormValOnFile(String fileDir,int speaker,double[][] normValues)
+    {
+
+        int numberOfFeatures = normValues[0].length;
+
+        try {
+
+            FileWriter writer = new FileWriter(fileDir,true);
+
+            writer.write(String.valueOf(speaker) + " ");
+
+            for(int i=0; i< numberOfFeatures; i++)
+            {
+                writer.write(String.valueOf((float)normValues[0][i]) + ":" + String.valueOf((float)normValues[1][i]) + " ");
+            }
+
+            writer.write('\n');
+
+            writer.flush();
+            writer.close();
+        }
+        catch (IOException exception)
+        {
+            Log.e("printNormValOnFile","Error while opening normVal file");
+        }
+    }
+
+    private static double[][] readNormValFromFile(String fileDir,int speaker,int numberOfFeatures)
+    {
+        double[][] normVal = new double[2][numberOfFeatures];
+
+        try{
+
+            BufferedReader reader = new BufferedReader(new FileReader(fileDir));
+            String[] splittedLine;
+
+            String line = "";
+            int redSpeaker = -1;
+            String[] maxAndMin;
+            double maxValue;
+            double minValue;
+
+            while (redSpeaker != speaker || line == null)
+            {
+              line = reader.readLine();
+              redSpeaker = Integer.parseInt(line.substring(0,line.indexOf(" ")));
+            }
+
+            line = line.substring(line.indexOf(" ") + 1);
+            splittedLine = line.split(" ");
+
+            for(int i =0; i< splittedLine.length; i++)
+            {
+                maxAndMin = splittedLine[i].split(":");
+                maxValue = Double.parseDouble(maxAndMin[0]);
+                minValue = Double.parseDouble(maxAndMin[1]);
+
+                normVal[0][i] = maxValue;
+                normVal[1][i] = minValue;
+            }
+
+        }
+        catch (IOException exception)
+        {
+            Log.e("readNormValFromFile","Error while opening normVal file");
+        }
+
+        return  normVal;
     }
     }
 

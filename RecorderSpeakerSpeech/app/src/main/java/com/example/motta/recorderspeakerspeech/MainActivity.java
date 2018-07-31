@@ -8,7 +8,7 @@ import android.widget.CheckBox;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String numberOfTest = "1";
+    private String numberOfTest = "11";
     Button btnRec = null;
     Button bttStt = null;
     CheckBox boxOne = null;
