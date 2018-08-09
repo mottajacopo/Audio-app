@@ -17,10 +17,12 @@ public class MainActivity extends AppCompatActivity {
     CheckBox boxTwo = null;
     EditText editText = null;
     EditText editText2 = null;
+    EditText editText3 = null;
     private int speaker = 0;
     private final String PATH = "Audio recognition files test";
     private final String FILENAME = "trainingData";
     private final String FILENAME2 = "rec";
+    private String speakerName = null;
 
     private int Fs = 8000;
     private int recordingLength = 3;
@@ -32,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         editText = findViewById(R.id.editText);
         editText2= findViewById(R.id.editText2);
+        editText3= findViewById(R.id.editText3);
         boxOne = findViewById(R.id.CheckOne);
         boxTwo = findViewById(R.id.CheckTwo);
         btnRec = findViewById(R.id.btt);
@@ -54,10 +57,12 @@ public class MainActivity extends AppCompatActivity {
                     recordingLength = Integer.parseInt(tvValue2);
                 }
 
-                recordingLength = recordingLength;
                 Fs = Fs;
+                recordingLength = recordingLength;
 
-                Rec rec = new Rec(getApplicationContext(), recordingLength, Fs,speaker);
+                speakerName = editText3.getText().toString();
+
+                Rec rec = new Rec(getApplicationContext(), recordingLength, Fs,speaker , speakerName);
                 rec.execute(PATH, FILENAME , FILENAME2,numberOfTest);
 
                 numberOfTest = String.valueOf(Integer.parseInt(numberOfTest) + 1);
