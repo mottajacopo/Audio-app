@@ -1,5 +1,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%(in COMMAND WINDOW)
+%GO TO PATH 
+%CREATE MODEL COMBINING MULTIPLE TXT FILE 
+%MOVE MODEL.TXT TO MODELLI FOLDER
+%%% cd \Users\motta\Desktop\frase2
+%%% system('copy file1.txt + file2.txt + file3.txt + file4.txt model.txt')
+%%% movefile \Users\motta\Desktop\frase2\model.txt \Users\motta\Downloads\SVM_matlab\modelli
+
+%MODIFY LABEL
+%%% nFrame = 0;
+%%% label_vector_model(1:nFrame) = 1;
+%%% label_vector_model(nFrame +1:end) = 2;
+
+%SAVE MODEL ON FILE 
+%%% %libsvmwrite('modelSpeaker1.txt', model.sv_coef, model.SVs);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 model = generate_model ('modelli\model_JvsAll2.txt' , '-t 2 -w1 3.7 -w2 0.8 -c 100 -g 0.0003');
 
-testing2(model);
+testing1(model);  %model from frase1
+% testing2(model);  %model from frase2
