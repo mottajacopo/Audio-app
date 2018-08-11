@@ -8,15 +8,15 @@
 %%% movefile \Users\motta\Desktop\frase2\model.txt \Users\motta\Downloads\SVM_matlab\modelli
 
 %MODIFY LABEL
-%%% nFrame = 0;
-%%% label_vector_model(1:nFrame) = 1;
-%%% label_vector_model(nFrame +1:end) = 2;
+%%%nFrame = 798;
+%%%label_vector_model(1:nFrame) = 1;
+%%%label_vector_model(nFrame +1:end) = 2;
 
 %SAVE MODEL ON FILE 
-%%% %libsvmwrite('modelSpeaker1.txt', model.sv_coef, model.SVs);
+%libsvmwrite('modelSpeaker2.txt', model.sv_coef, model.SVs);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-model = generate_model ('modelli\model_JvsAll2.txt' , '-t 2 -w1 3.7 -w2 0.8 -c 100 -g 0.0003');
+[ modelMJ , instance_matrix_MJ ] = generate_model ('modelli\modelMJ.txt' , '-t 2 -w1 3.7 -w2 0.8 -c 1 -g 0.003');
 
-testing1(model);  %model from frase1
-% testing2(model);  %model from frase2
+%testing1(model);  %model from frase1
+testing2(modelMJ_avg);  %model from frase2

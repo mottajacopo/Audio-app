@@ -6,6 +6,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -38,7 +39,7 @@ public class Rec extends AsyncTask<String,Void,String> {
     private Context context = null;
 
     private int speaker = 0;
-    private String speakerName= null;
+    private String speakerName = null;
     private int recordingLenghtInSec = 0;
     private int Fs = 0; //freq di campionamento
     private int nSamples = 0;
@@ -48,8 +49,7 @@ public class Rec extends AsyncTask<String,Void,String> {
     private short[] audioData = null; //java codifica i campioni audio in degli short 16 bit
     private AudioRecord record = null;
 
-    public Rec(Context _context, int _recordingLenghtInSec, int _Fs, int _speaker , String _speakerName)
-    {
+    public Rec(Context _context, int _recordingLenghtInSec, int _Fs, int _speaker, String _speakerName) {
         speaker = _speaker;
         speakerName = _speakerName;
         context = _context;
@@ -60,14 +60,16 @@ public class Rec extends AsyncTask<String,Void,String> {
 
         audioData = new short[nSamples]; //oppure passo direttamente l'array alla main activity per poi gestirlo li
 
-        record = new AudioRecord(MediaRecorder.AudioSource.MIC, Fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,2*nSamples);//il buffer in byte dovrà essere il doppio della dimensione dell array
+        record = new AudioRecord(MediaRecorder.AudioSource.MIC, Fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, 2 * nSamples);//il buffer in byte dovrà essere il doppio della dimensione dell array
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
 
-        Toast.makeText(context,"Start Recording", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(context, "Start Recording", Toast.LENGTH_SHORT).show();
+
+        showToastMessage("start", 500);
     }
 
     @Override
@@ -82,31 +84,28 @@ public class Rec extends AsyncTask<String,Void,String> {
         String fileDir = storeDir + "/" + _fileName;
         File f = new File(storeDir);
 
-        if(!f.exists())
-        {
-            if(!f.mkdir())
-            {
-                Log.e(TAG,"Cannot create directory");
+        if (!f.exists()) {
+            if (!f.mkdir()) {
+                Log.e(TAG, "Cannot create directory");
             }
         }
 
         record.startRecording(); //apre il record dalla sorgente indicata con MIC
-        record.read(audioData,0,nSamples);//inizia la lettura e la finisce
+        record.read(audioData, 0, nSamples);//inizia la lettura e la finisce
         record.stop();
         record.release();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //save .wav file
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        byte dataByte[] = new byte[2*nSamples];
+        byte dataByte[] = new byte[2 * nSamples];
 
-        for (int i = 0; i< nSamples; i++)
-        {
-            dataByte[2*i] = (byte)(audioData[i] & 0x00ff);
-            dataByte[2*i +1] = (byte)((audioData[i] >> 8) & 0x00ff);
+        for (int i = 0; i < nSamples; i++) {
+            dataByte[2 * i] = (byte) (audioData[i] & 0x00ff);
+            dataByte[2 * i + 1] = (byte) ((audioData[i] >> 8) & 0x00ff);
         }
 
-        WavIO writeWav = new WavIO(storeDir + "/" + _fileName2 + numberOfTest + ".wav", 16,1,1,Fs,2,16,dataByte);
+        WavIO writeWav = new WavIO(storeDir + "/" + _fileName2 + numberOfTest + ".wav", 16, 1, 1, Fs, 2, 16, dataByte);
         writeWav.save();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -114,23 +113,22 @@ public class Rec extends AsyncTask<String,Void,String> {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ArrayList<float[]> floatSamplesPerFrame = new ArrayList<>();
 
-        while (nSamples - nSamplesAlreadyProcessed >= nSamplesPerFrame/2) { //fino a che trovo blocchi lunghi nsamplesperframe mezzi
+        while (nSamples - nSamplesAlreadyProcessed >= nSamplesPerFrame / 2) { //fino a che trovo blocchi lunghi nsamplesperframe mezzi
 
             float[] temp = new float[nSamplesPerFrame];
 
             for (int i = 0; i < nSamplesPerFrame; i++) {
 
-                temp[i] = audioData[i + nSamplesAlreadyProcessed -(80*(nSamplesAlreadyProcessed/nSamplesPerFrame))];
+                temp[i] = audioData[i + nSamplesAlreadyProcessed - (80 * (nSamplesAlreadyProcessed / nSamplesPerFrame))];
             }
 
             floatSamplesPerFrame.add(temp);
 
-            if(nSamplesAlreadyProcessed == 0) {
+            if (nSamplesAlreadyProcessed == 0) {
 
                 nSamplesAlreadyProcessed = nSamplesPerFrame;
-            }
-            else {
-                nSamplesAlreadyProcessed += nSamplesPerFrame/2;
+            } else {
+                nSamplesAlreadyProcessed += nSamplesPerFrame / 2;
             }
         }
 
@@ -140,11 +138,11 @@ public class Rec extends AsyncTask<String,Void,String> {
         ArrayList<double[]> cepCoeffPerFrame = new ArrayList<double[]>();
         ArrayList<double[]> deltadelta = new ArrayList<double[]>();
 
-        TarsosDSPAudioFormat af = new TarsosDSPAudioFormat(Fs,16,record.getChannelCount(),true,true);
+        TarsosDSPAudioFormat af = new TarsosDSPAudioFormat(Fs, 16, record.getChannelCount(), true, true);
         AudioEvent ae = new AudioEvent(af);
-        MFCC mfcc = new MFCC(nSamplesPerFrame,Fs,13,30, 133.3334f, ((float)Fs)/2f);
+        MFCC mfcc = new MFCC(nSamplesPerFrame, Fs, 13, 30, 133.3334f, ((float) Fs) / 2f);
 
-        for(int j =0; j< floatSamplesPerFrame.size(); j++){
+        for (int j = 0; j < floatSamplesPerFrame.size(); j++) {
 
             ae.setFloatBuffer(floatSamplesPerFrame.get(j));//metto nel buffer di ae un blocco di campioni alla volta (singoli frame)
             mfcc.process(ae);//calcolo mfcc sul singolo frame
@@ -153,13 +151,13 @@ public class Rec extends AsyncTask<String,Void,String> {
 
         }
 
-        deltadelta = computeDeltas(computeDeltas(cepCoeffPerFrame,2),2);//calcolo i delta di secondo ordine applicando due volte la funzione delta
+        deltadelta = computeDeltas(computeDeltas(cepCoeffPerFrame, 2), 2);//calcolo i delta di secondo ordine applicando due volte la funzione delta
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //print features on file
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, storeDir + "/testDataFormat" + speakerName + numberOfTest + ".txt",speaker);
+        printFeaturesOnFileFormat(cepCoeffPerFrame, deltadelta, storeDir + "/testDataFormat" + speakerName + numberOfTest + ".txt", speaker);
 
         return null;
     }
@@ -167,7 +165,23 @@ public class Rec extends AsyncTask<String,Void,String> {
     @Override
     protected void onPostExecute(String string) {
         super.onPostExecute(string);
-        Toast.makeText(context,"End Recording",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(context, "End Recording", Toast.LENGTH_SHORT).show();
         //Toast.makeText(context, string, Toast.LENGTH_SHORT).show();
+
+        showToastMessage("end", 500);
     }
+
+
+    public void showToastMessage(String text, int duration) {
+        final Toast toast = Toast.makeText(context , text, Toast.LENGTH_SHORT);
+        toast.show();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                toast.cancel();
+            }
+        }, duration);
+    }
+
 }
