@@ -78,7 +78,7 @@ public class Rec extends AsyncTask<String,Void,String> {
         String _path = strings[0];
         String _fileName = strings[1]; // usato per il train e test svm
         String _fileName2 = strings[2]; //usato per il file .wav e STT
-        String numberOfTest = strings[3];
+        int numberOfTest = (Integer.parseInt(strings[3]));
 
         String storeDir = Environment.getExternalStorageDirectory() + "/" + _path;
         String fileDir = storeDir + "/" + _fileName;
@@ -157,6 +157,12 @@ public class Rec extends AsyncTask<String,Void,String> {
 //print features on file
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        File check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+
+        while(check.exists()) {
+            numberOfTest++;
+            check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+        }
         printFeaturesOnFileFormat(cepCoeffPerFrame, deltadelta, storeDir + "/testDataFormat" + speakerName + numberOfTest + ".txt", speaker);
 
         return null;
