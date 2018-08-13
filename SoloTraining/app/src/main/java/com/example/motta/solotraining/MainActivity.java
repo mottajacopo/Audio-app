@@ -66,8 +66,6 @@ public class MainActivity extends AppCompatActivity {
                 rec.execute(PATH, FILENAME , FILENAME2,numberOfTest);
 
                 numberOfTest = String.valueOf(Integer.parseInt(numberOfTest) + 1);
-
-
             }
         });
 

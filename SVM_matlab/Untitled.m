@@ -20,3 +20,4 @@
 
 %testing1(model);  %model from frase1
 testing2(modelMJ_avg);  %model from frase2
+

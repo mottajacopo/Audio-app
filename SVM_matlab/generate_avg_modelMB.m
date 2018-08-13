@@ -34,6 +34,18 @@ label_vector(399 +1:end) = 2;
 instance_matrix_MB_avg = (instance_matrix_MB1 + instance_matrix_MB2 + instance_matrix_MB3 + instance_matrix_MB4 + instance_matrix_MB5 +instance_matrix_MB6 + instance_matrix_MB7 + instance_matrix_MB8 + instance_matrix_MB9 +instance_matrix_MB10)/10;
 
 modelMB_avg = svmtrain(label_vector, instance_matrix_MB_avg, option);
+modelMB1 = svmtrain(label_vector, instance_matrix_MB1, option);
+modelMB2 = svmtrain(label_vector, instance_matrix_MB2, option);
+modelMB3 = svmtrain(label_vector, instance_matrix_MB3, option);
+modelMB4 = svmtrain(label_vector, instance_matrix_MB4, option);
+modelMB5 = svmtrain(label_vector, instance_matrix_MB5, option);
+modelMB6 = svmtrain(label_vector, instance_matrix_MB6, option);
+modelMB7 = svmtrain(label_vector, instance_matrix_MB7, option);
+modelMB8 = svmtrain(label_vector, instance_matrix_MB8, option);
+modelMB9 = svmtrain(label_vector, instance_matrix_MB9, option);
+modelMB10 = svmtrain(label_vector, instance_matrix_MB10, option);
 
-testing2(modelMB_avg);
+libsvmwrite('modelSpeaker1.txt', modelMB7.sv_coef, modelMB7.SVs);
+
+testing2(modelMB7);
 

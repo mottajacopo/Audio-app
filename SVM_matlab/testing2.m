@@ -22,9 +22,9 @@ function testing2(model)
     read_predict (model , file , folder , 399);
     end
     
-    %for i=1:1:5 
-    %file = strcat('testDataFormat',int2str(i),'.txt');
-    %read_predict (model , file , folder , 399);
-    %end
+    for i=1:1:3 
+    file = strcat('testDataFormat',int2str(i),'.txt');
+    read_predict (model , file , folder , 399);
+    end
 
 end

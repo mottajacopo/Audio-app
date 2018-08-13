@@ -303,7 +303,5 @@ public class SupportFunctions {
         }
 
     }
-
-
 }
 
