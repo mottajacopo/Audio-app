@@ -4,40 +4,69 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
 
+    private String numberOfTest = "1";
     Button btnRec = null;
     Button bttStt = null;
-    private final String PATH = "Audio recognition files";
-    private final String FILENAME = "trainingData";//file utilizzato per il training della SVM (contiene mfcc + deltadelta dei parlatori)
-    private final String FILENAME2 = "rec.wav";// file .wav che serve allo speech to text
+    CheckBox boxOne = null;
+    CheckBox boxTwo = null;
+    EditText editText = null;
+    EditText editText2 = null;
+    EditText editText3 = null;
+    private String speakerName = null;
+    private int speaker = 0;
+    private final String PATH = "Audio recognition files multi";
+    private final String FILENAME = "trainingData";
+    private final String FILENAME2 = "rec.wav";
 
-    private final int Fs = 44200;
-    private final int recordingLength = 3;
+    private int Fs = 8000;
+    private int recordingLength = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//SAVE FILE .WAV + SPEAKER RECOGNITION (LIBSVM)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+        editText = findViewById(R.id.editText);
+        editText2= findViewById(R.id.editText2);
+        editText3= findViewById(R.id.editText3);
+        boxOne = findViewById(R.id.CheckOne);
+        boxTwo = findViewById(R.id.CheckTwo);
         btnRec = findViewById(R.id.btt);
         btnRec.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                SpeakerRecognition speaker = new SpeakerRecognition(getApplicationContext(), recordingLength, Fs);
-                speaker.execute(PATH, FILENAME , FILENAME2);
+                if(boxOne.isChecked())
+                    speaker = 1;
+                else
+                    speaker = 2;
+
+                String tvValue = editText.getText().toString();
+                if (!tvValue.equals("") ) {
+                    Fs = Integer.parseInt(tvValue);
+                }
+
+                String tvValue2 = editText2.getText().toString();
+                if (!tvValue2.equals("") ) {
+                    recordingLength = Integer.parseInt(tvValue2);
+                }
+
+                Fs = Fs;
+                recordingLength = recordingLength;
+
+                speakerName = editText3.getText().toString();
+
+                Rec rec = new Rec(getApplicationContext(), recordingLength, Fs,speaker , speakerName);
+                rec.execute(PATH, FILENAME , FILENAME2,numberOfTest);
+
+                numberOfTest = String.valueOf(Integer.parseInt(numberOfTest) + 1);
             }
         });
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//SPEECH RECOGNITION (API IBM (watson))
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         bttStt = findViewById(R.id.bttStt);
         bttStt.setOnClickListener(new View.OnClickListener() {
@@ -45,10 +74,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                SpeechRecognition speech = new SpeechRecognition(getApplicationContext());
-                speech.execute(PATH, FILENAME2);
+                STT stt = new STT(getApplicationContext());
+                stt.execute(PATH, FILENAME2);
             }
         });
+
 
     }
 }

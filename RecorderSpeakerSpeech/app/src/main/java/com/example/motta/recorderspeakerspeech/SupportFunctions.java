@@ -2,21 +2,27 @@ package com.example.motta.recorderspeakerspeech;
 
 import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
+
+import libsvm.svm;
+import libsvm.svm_node;
 
 /**
  * Created by MyPC on 26/05/2018.
  */
 
 public class SupportFunctions {
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//funzione per il calcolo dei delta degli mfcc
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     public static ArrayList<double[]> computeDeltas (ArrayList<double[]> mfccCoeff, int n)
     {
@@ -57,11 +63,6 @@ public class SupportFunctions {
         return  deltas;
     }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//funzione per conversione float to double
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
     public static double[] convertFloatsToDoubles(float[] input)
     {
         if (input == null)
@@ -75,11 +76,6 @@ public class SupportFunctions {
         }
         return output;
     }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//fuzione per unire features e delta del parlatore da riconoscere in una lista (utilizzata  per creare poi gli svm_node)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     public static ArrayList<double[]> uniteAllFeaturesInOneList (ArrayList<double[]> mfcc, ArrayList<double[]> deltadelta)
     {
@@ -106,32 +102,27 @@ public class SupportFunctions {
         return union;
     }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//funzione che salva il file contenente le features e i delta dei parlatori autorizzati (utilizzata per creare svm _node e il modello)
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public static void printFeaturesOnFile (ArrayList<double[]> mfcc, ArrayList<double[]> deltadelta, String _fileDir)
+    public static void printFeaturesOnFile (ArrayList<double[]> mfcc, ArrayList<double[]> deltadelta, String _fileDir,int speaker)
     {
 
         //final String label = "2"; //label che va cambiato ad ogni registrazione di un parlatore diverso
 
-        final double label = 1;
+        final double label = (double) speaker;
 
         ArrayList<double[]> union = uniteAllFeaturesInOneList(mfcc,deltadelta);
 
         int totalNumberOfFeatures = union.get(0).length;
-/*
-        DecimalFormatSymbols symbol = new DecimalFormatSymbols();
+
+        /*DecimalFormatSymbols symbol = new DecimalFormatSymbols();
         symbol.setDecimalSeparator('.');
         DecimalFormat format = new DecimalFormat("#.0000000",symbol);
         float value;
         String stringValue;
 */
+
         try
         {
-/*
-           FileWriter writeOnTrainingFile = new FileWriter(_fileDir,true);
+           /* FileWriter writeOnTrainingFile = new FileWriter(_fileDir,true);
 
             for(int b=0; b < union.size(); b++){//per ogni vettore di features da 26 elementi
 
@@ -153,6 +144,7 @@ public class SupportFunctions {
 
             writeOnTrainingFile.flush();
             writeOnTrainingFile.close();
+
 */
             FileOutputStream fileOutputStream = new FileOutputStream(_fileDir,true); //controlla
             DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
@@ -174,6 +166,8 @@ public class SupportFunctions {
             fileOutputStream.flush();
             fileOutputStream.close();
 
+
+
         }
         catch (IOException exception)
         {
@@ -182,22 +176,304 @@ public class SupportFunctions {
         }
     }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//funzione per salvare il file .wav del parlatore (utilizzata per il riconoscimento della frase )
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public static void saveWavFile (int Fs , int nSamples , short[] audioData , String _fileName , String storeDir)
+    public static void printFeaturesOnFileFormat (ArrayList<double[]> mfcc, ArrayList<double[]> deltadelta, String _fileDir, int speaker)
     {
-        byte dataByte[] = new byte[2*nSamples];
 
-        for (int i = 0; i< nSamples; i++)
+
+        final String label = String.valueOf(speaker); //label che va cambiato ad ogni registrazione di un parlatore diverso
+
+        ArrayList<double[]> union = uniteAllFeaturesInOneList(mfcc,deltadelta);
+
+        int totalNumberOfFeatures = union.get(0).length;
+
+        /*DecimalFormatSymbols symbol = new DecimalFormatSymbols();
+        symbol.setDecimalSeparator('.');
+        DecimalFormat format = new DecimalFormat("#.0000000",symbol);
+        float value;
+        String stringValue;
+*/
+
+        try
         {
-            dataByte[2*i] = (byte)(audioData[i] & 0x00ff);
-            dataByte[2*i +1] = (byte)((audioData[i] >> 8) & 0x00ff);
+            FileWriter writeOnTrainingFile = new FileWriter(_fileDir,true);
+
+            for(int b=0; b < union.size(); b++){//per ogni vettore di features da 26 elementi
+
+                writeOnTrainingFile.write(label + " ");
+
+                for(int i=0; i< totalNumberOfFeatures; i++){
+
+
+                    //writeOnTrainingFile.write( Integer.toString(i+1) + ":" + Double.toString(union.get(b)[i]) + " ");
+                    //writeOnTrainingFile.write( Integer.toString(i+1) + ":" + format.format(union.get(b)[i]) + " ");
+
+                    writeOnTrainingFile.write( Integer.toString(i+1) + ":" + Float.toString((float)union.get(b)[i]) + " ");
+
+
+                }
+
+                writeOnTrainingFile.write("\n");
+            }
+
+            writeOnTrainingFile.flush();
+            writeOnTrainingFile.close();
+
+
+        }
+        catch (IOException exception)
+        {
+
+            Log.e("printOnTrainingFile","Training file not exists");
+        }
+    }
+
+    public static double[][] ReadSVsCoeff (String SVsCoeffFileName) {
+        String content = null;
+        String[] splittedContent = null;
+        ArrayList<Double> listedResult = new ArrayList<>();
+
+        try {
+
+            FileReader fileReader = new FileReader(SVsCoeffFileName);
+            try {
+                while (true) {
+                    content += fileReader.read();
+                }
+            } catch (EOFException eofReached) {
+                splittedContent = content.split(",");
+
+                for (int i = 0; i < splittedContent.length; i++) {
+
+                    listedResult.add(i, Double.parseDouble(splittedContent[i]));
+                }
+
+                double[][] result = new double[listedResult.size()][0];
+
+                for (int i = 0; i < listedResult.size(); i++) {
+
+                    result[i][0] = listedResult.get(i);
+
+                }
+
+                return result;
+            }
+
+        } catch (IOException exception) {
+
+            return null;
+
+        }
+    }
+    public static svm_node[][] readTestDataFromFormatFile(String fileDir,int framesPerSpeaker,int totalNumberOfFeatures)
+    {
+        String line = null;
+        String[] splittedLine = null;
+        svm_node[][] result = new svm_node[framesPerSpeaker][totalNumberOfFeatures + 1];
+        try{
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(fileDir));
+
+            for(int j=0; j<framesPerSpeaker; j++ ) {
+
+                line = bufferedReader.readLine();
+                line = line.substring(line.indexOf(' ') + 1);
+                splittedLine = line.split(" ");
+
+                for (int i = 0; i < splittedLine.length; i++) {
+
+                    svm_node node = new svm_node();
+                    node.index = i;
+                    node.value = Double.parseDouble(splittedLine[i].split(":")[1]);
+                    result[j][i] = node;
+                }
+
+                svm_node finalNode = new svm_node();
+                finalNode.index = -1;
+                finalNode.value = 0;
+                result[j][totalNumberOfFeatures] = finalNode;
+            }
+
+            return result;
+
+
+
+        }
+        catch(IOException exception)
+        {
+
+            return null;
         }
 
-        WavIO writeWav = new WavIO(storeDir + "/" + _fileName, 16,1,1,Fs,2,16,dataByte);
-        writeWav.save();
+    }
+
+    public static svm_node[][] scaleTestData(svm_node[][] testDataToBeScaled,int speaker,String storeDir)
+    {
+        String fileDir = storeDir + "/normValues.txt";
+
+        int numberOfFeatures = testDataToBeScaled[0].length -1;
+        int numberOfFrames = testDataToBeScaled.length;
+        double[][] normValues = new double[2][numberOfFeatures];
+
+        svm_node[][] scaledData = new svm_node[numberOfFrames][numberOfFeatures + 1];
+
+        for(int i = 0; i< numberOfFrames; i++)
+        {
+            scaledData[i][numberOfFeatures] = testDataToBeScaled[i][numberOfFeatures]; //copia i nodi finali che non vanno scalati
+        }
+
+        normValues = readNormValFromFile(fileDir,speaker,numberOfFeatures);
+
+        for(int i=0; i< numberOfFeatures; i++)
+        {
+            for(int j = 0; j< numberOfFrames; j++)
+            {
+                //scaledData[j][i].index = i;
+                //scaledData[j][i].value = (testDataToBeScaled[j][i].value - normValues[1][i])/(normValues[0][i] - normValues[1][i]);
+
+                svm_node node = new svm_node();
+                node.index = i;
+                node.value = (testDataToBeScaled[j][i].value - normValues[1][i])/(normValues[0][i] - normValues[1][i]);
+                scaledData[j][i] = node;
+            }
+        }
+
+        return scaledData;
+    }
+
+    public static svm_node[][] scaleTrainingData(svm_node[][] trainingDataToBeScaled,String storeDir,int speaker)
+    {
+        String normValFileDir = storeDir + "/normValues.txt";
+
+        int numberOfFeatures = trainingDataToBeScaled[0].length -1;
+        int numberOfFrames = trainingDataToBeScaled.length;
+        double[][] normValues = new double[2][numberOfFeatures];
+
+        svm_node[][] scaledData = new svm_node[numberOfFrames][numberOfFeatures + 1];
+
+        for(int i = 0; i< numberOfFrames; i++)
+        {
+            scaledData[i][numberOfFeatures] = trainingDataToBeScaled[i][numberOfFeatures]; //copia i nodi finali che non vanno scalati
+        }
+
+        ArrayList<Double> values = new ArrayList<>(numberOfFrames);
+        double maxValue;
+        double minValue;
+
+        for(int i=0;i<numberOfFeatures;i++)
+        {
+            values.clear();
+
+            for (int j=0;j<numberOfFrames;j++)
+            {
+                values.add(j,trainingDataToBeScaled[j][i].value);
+            }
+
+            maxValue = Collections.max(values);
+            minValue = Collections.min(values);
+
+            normValues[0][i] = maxValue;
+            normValues[1][i] = minValue;
+
+            for(int k =0; k< numberOfFrames;k++)
+            {
+                //scaledData[k][i].index = i;
+                //scaledData[k][i].value = (trainingDataToBeScaled[k][i].value - minValue) / (maxValue - minValue);
+
+                svm_node node = new svm_node();
+                node.index = i;
+                node.value = (trainingDataToBeScaled[k][i].value - minValue)/(maxValue-minValue);
+                scaledData[k][i] = node;
+            }
+        }
+
+        printNormValOnFile(normValFileDir,speaker,normValues);
+        return scaledData;
+    }
+
+    private static void printNormValOnFile(String fileDir,int speaker,double[][] normValues)
+    {
+
+        int numberOfFeatures = normValues[0].length;
+
+        try {
+
+            FileWriter writer = new FileWriter(fileDir,true);
+
+            writer.write(String.valueOf(speaker) + " ");
+
+            for(int i=0; i< numberOfFeatures; i++)
+            {
+                writer.write(String.valueOf((float)normValues[0][i]) + ":" + String.valueOf((float)normValues[1][i]) + " ");
+            }
+
+            writer.write('\n');
+
+            writer.flush();
+            writer.close();
+        }
+        catch (IOException exception)
+        {
+            Log.e("printNormValOnFile","Error while opening normVal file");
+        }
+    }
+
+    private static double[][] readNormValFromFile(String fileDir,int speaker,int numberOfFeatures)
+    {
+        double[][] normVal = new double[2][numberOfFeatures];
+
+        try{
+
+            BufferedReader reader = new BufferedReader(new FileReader(fileDir));
+            String[] splittedLine;
+
+            String line = "";
+            int redSpeaker = -1;
+            String[] maxAndMin;
+            double maxValue;
+            double minValue;
+
+            while (redSpeaker != speaker || line == null)
+            {
+              line = reader.readLine();
+              redSpeaker = Integer.parseInt(line.substring(0,line.indexOf(" ")));
+            }
+
+            line = line.substring(line.indexOf(" ") + 1);
+            splittedLine = line.split(" ");
+
+            for(int i =0; i< splittedLine.length; i++)
+            {
+                maxAndMin = splittedLine[i].split(":");
+                maxValue = Double.parseDouble(maxAndMin[0]);
+                minValue = Double.parseDouble(maxAndMin[1]);
+
+                normVal[0][i] = maxValue;
+                normVal[1][i] = minValue;
+            }
+
+        }
+        catch (IOException exception)
+        {
+            Log.e("readNormValFromFile","Error while opening normVal file");
+        }
+
+        return  normVal;
+    }
+
+    public static String removeChar (String result)
+    {
+        result = result.replaceAll("\n"," ");
+        result = result.replaceAll("confidence","");
+        result = result.replaceAll("transcript","");
+        result = result.replaceAll(":","");
+        result = result.replaceAll("\"","");
+        result = result.replaceAll("\\x5b","");
+        result = result.replaceAll("\\x5d","");
+        result = result.replaceAll("\\x7b","");
+        result = result.replaceAll("\\x7d","");
+        result = result.replaceAll("\\d","");
+        result = result.replaceAll(".,","");
+        result = result.replaceAll("  ","");
+
+        return result;
     }
 }
