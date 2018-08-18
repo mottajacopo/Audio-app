@@ -6,6 +6,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -67,7 +68,7 @@ public class Rec extends AsyncTask<String,Void,String> {
     protected void onPreExecute() {
         super.onPreExecute();
 
-        Toast.makeText(context,"Start Recording", Toast.LENGTH_SHORT).show();
+        showToastMessage("start", 500);
     }
 
     @Override
@@ -76,8 +77,7 @@ public class Rec extends AsyncTask<String,Void,String> {
         String _path = strings[0];
         String _fileName = strings[1]; // usato per il train e test svm
         String _fileName2 = strings[2]; //usato per il file .wav e STT
-        String numberOfTest = strings[3];
-
+        int numberOfTest = (Integer.parseInt(strings[3]));
         String storeDir = Environment.getExternalStorageDirectory() + "/" + _path;
         String fileDir = storeDir + "/" + _fileName;
         File f = new File(storeDir);
@@ -106,7 +106,14 @@ public class Rec extends AsyncTask<String,Void,String> {
             dataByte[2*i +1] = (byte)((audioData[i] >> 8) & 0x00ff);
         }
 
-        WavIO writeWav = new WavIO(storeDir + "/" + _fileName2 + numberOfTest + ".wav", 16,1,1,Fs,2,16,dataByte);
+        File check = new File( storeDir + "/" + _fileName2 + Integer.toString(numberOfTest) + ".wav");
+
+        while(check.exists()) {
+            numberOfTest++;
+            check = new File( storeDir + "/" + _fileName2 + Integer.toString(numberOfTest) + ".wav");
+        }
+
+        WavIO writeWav = new WavIO(storeDir + "/" + _fileName2 + Integer.toString(numberOfTest) + ".wav", 16,1,1,Fs,2,16,dataByte);
         writeWav.save();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +166,13 @@ public class Rec extends AsyncTask<String,Void,String> {
 //print features on file
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+
+        while(check.exists()) {
+            numberOfTest++;
+            check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+        }
+
         printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, storeDir + "/testDataFormat" + speakerName + numberOfTest + ".txt",speaker);
 
         return null;
@@ -167,7 +181,22 @@ public class Rec extends AsyncTask<String,Void,String> {
     @Override
     protected void onPostExecute(String string) {
         super.onPostExecute(string);
-        Toast.makeText(context,"End Recording",Toast.LENGTH_SHORT).show();
-        //Toast.makeText(context, string, Toast.LENGTH_SHORT).show();
+        showToastMessage("end", 500);
+    }
+
+    public void showToastMessage(String text, int duration) {
+        final Toast toast = Toast.makeText(context , text, Toast.LENGTH_SHORT);
+        toast.show();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                toast.cancel();
+            }
+        }, duration);
     }
 }
+
+
+
+

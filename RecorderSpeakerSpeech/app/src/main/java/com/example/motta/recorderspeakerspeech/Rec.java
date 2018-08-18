@@ -93,7 +93,7 @@ public class Rec extends AsyncTask<String,Void,String> {
         String _path = strings[0];
         String _fileName = strings[1]; // usato per il train e test svm
         String _fileName2 = strings[2]; //usato per il file .wav e STT
-
+        int numberOfTest = (Integer.parseInt(strings[3]));
 
         String storeDir = Environment.getExternalStorageDirectory() + "/" + _path;
         String fileDir = storeDir + "/" + _fileName;
@@ -123,7 +123,14 @@ public class Rec extends AsyncTask<String,Void,String> {
             dataByte[2*i +1] = (byte)((audioData[i] >> 8) & 0x00ff);
         }
 
-        WavIO writeWav = new WavIO(storeDir + "/" + _fileName2, 16,1,1,Fs,2,16,dataByte);
+        File check = new File( storeDir + "/" + _fileName2 + Integer.toString(numberOfTest) + ".wav");
+
+        while(check.exists()) {
+            numberOfTest++;
+            check = new File( storeDir + "/" + _fileName2 + Integer.toString(numberOfTest) + ".wav");
+        }
+
+        WavIO writeWav = new WavIO(storeDir + "/" + _fileName2 + ".wav", 16,1,1,Fs,2,16,dataByte);
         writeWav.save();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -178,7 +185,6 @@ public class Rec extends AsyncTask<String,Void,String> {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         //String numberOfTest = strings[3];
-        int numberOfTest = (Integer.parseInt(strings[3]));
         int numberOfTrainingSpeakers = 2;
         int totalNumberOfFeatures = 2 * (cepCoeffPerFrame.get(0).length);
         int numberOfFramesPerSpeaker = cepCoeffPerFrame.size();
@@ -190,7 +196,6 @@ public class Rec extends AsyncTask<String,Void,String> {
 
             printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, fileDir + "WithFormat.txt",speaker);
 */
-
             //////printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, fileDir + "WithFormat" + String.valueOf(speaker) + ".txt",speaker);
 
 
@@ -385,7 +390,7 @@ public class Rec extends AsyncTask<String,Void,String> {
                 }
 
                 //svm.svm_save_model(storeDir + "/model.txt",model);
-                File check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+                check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
 
                 while(check.exists()) {
                     numberOfTest++;

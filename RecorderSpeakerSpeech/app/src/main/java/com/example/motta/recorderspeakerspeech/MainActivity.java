@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private int speaker = 0;
     private final String PATH = "Audio recognition files multi";
     private final String FILENAME = "trainingData";
-    private final String FILENAME2 = "rec.wav";
+    private final String FILENAME2 = "rec";
 
     private int Fs = 8000;
     private int recordingLength = 3;
