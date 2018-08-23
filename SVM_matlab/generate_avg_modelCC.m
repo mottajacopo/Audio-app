@@ -11,11 +11,11 @@ system('copy frase2\CC9.txt +  frase2\MB9.txt + frase2\MJ9.txt + frase2\MT9.txt 
 system('copy frase2\CC10.txt +  frase2\MB10.txt + frase2\MJ10.txt + frase2\MT10.txt modelli\modelCC10.txt');
 
 
-option = '-t 2 -c 100 -g 0.0003';
+option = '-t 2 -c 100 -g 0.003';
 
 [label_vector, instance_matrix] = libsvmread('modelli\modelCC1.txt');
-label_vector(1:399) = 1;
-label_vector(399 +1:end) = 2;
+label_vector(1:299) = 1;
+label_vector(299 +1:end) = 2;
 
 [ modelCC1 , instance_matrix_CC1 ] = generate_model2 ('modelli\modelCC1.txt' , option,label_vector);
 [ modelCC2 , instance_matrix_CC2 ] = generate_model2 ('modelli\modelCC2.txt' , option,label_vector);

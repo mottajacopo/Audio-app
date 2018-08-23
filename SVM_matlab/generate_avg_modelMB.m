@@ -15,8 +15,8 @@ system('copy frase2\MB10.txt +  frase2\CC10.txt + frase2\MJ10.txt + frase2\MT10.
 option = '-t 2 -c 100 -g 0.003';
 
 [label_vector, instance_matrix] = libsvmread('modelli\modelMB1.txt');
-label_vector(1:399) = 1;
-label_vector(399 +1:end) = 2;
+label_vector(1:299) = 1;
+label_vector(299 +1:end) = 2;
 
 [ modelMB1 , instance_matrix_MB1 ] = generate_model2 ('modelli\modelMB1.txt' , option,label_vector);
 [ modelMB2 , instance_matrix_MB2 ] = generate_model2 ('modelli\modelMB2.txt' , option,label_vector);
@@ -45,7 +45,7 @@ modelMB8 = svmtrain(label_vector, instance_matrix_MB8, option);
 modelMB9 = svmtrain(label_vector, instance_matrix_MB9, option);
 modelMB10 = svmtrain(label_vector, instance_matrix_MB10, option);
 
-libsvmwrite('modelSpeaker1.txt', modelMB7.sv_coef, modelMB7.SVs);
+%libsvmwrite('modelSpeaker1.txt', modelMB7.sv_coef, modelMB7.SVs);
 
-testing2(modelMB7);
+testing2(modelMB_avg);
 
