@@ -8,16 +8,25 @@
 %%% movefile \Users\motta\Desktop\frase2\model.txt \Users\motta\Downloads\SVM_matlab\modelli
 
 %MODIFY LABEL
-nFrame = 299;
-label_vector_model(1:nFrame) = 1;
-label_vector_model(nFrame +1:end) = 2;
+%nFrame = 299;
+%label_vector_model(1:nFrame) = 1;
+%label_vector_model(nFrame +1:end) = 2;
 
 %SAVE MODEL ON FILE 
 %libsvmwrite('modelSpeaker2.txt', model.sv_coef, model.SVs);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-[ modelMT , instance_matrix_MT ] = generate_model ('frase4\modelMT.txt' , '-t 2 -c 1 -g 0.003');
-libsvmwrite('modelSpeaker3.txt', modelMT.sv_coef, modelMT.SVs);
+option = '-t 2 -c 1 -g 0.006';
+
+%mettere norm = 0 per normalizzare tra -1 e 1
+norm = 0;
+if(norm == 0)
+    option = '-t 2 -c 12 -g 0.03';
+end
+
+[ modelMJ , instance_matrix_MJ ,normValsOut] = generate_model ('modelMJmic.txt' , option, norm);
+
+%libsvmwrite('modelSpeaker3.txt', modelMT.sv_coef, modelMT.SVs);
 %testing1(model);  %model from frase1
-testing2(modelMJ);  %model from frase2
+testing2(modelMJ,normValsOut);  %model from frase2
 
