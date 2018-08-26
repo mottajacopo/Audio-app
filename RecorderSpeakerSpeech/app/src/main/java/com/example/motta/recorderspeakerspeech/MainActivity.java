@@ -17,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     EditText editText = null;
     EditText editText2 = null;
     EditText editText3 = null;
+    EditText editText4 = null;
     private String speakerName = null;
     private int speaker = 0;
     private final String PATH = "Audio recognition files multi";
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int Fs = 8000;
     private int recordingLength = 3;
+    private double frameLength = 0.02;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
         editText = findViewById(R.id.editText);
         editText2= findViewById(R.id.editText2);
         editText3= findViewById(R.id.editText3);
+        editText4= findViewById(R.id.editText4);
         boxOne = findViewById(R.id.CheckOne);
         boxTwo = findViewById(R.id.CheckTwo);
         btnRec = findViewById(R.id.btt);
@@ -61,7 +64,12 @@ public class MainActivity extends AppCompatActivity {
 
                 speakerName = editText3.getText().toString();
 
-                Rec rec = new Rec(getApplicationContext(), recordingLength, Fs,speaker , speakerName);
+                String tvValue4 = editText4.getText().toString();
+                if (!tvValue4.equals("") ) {
+                    frameLength = Double.parseDouble(tvValue4);
+                }
+
+                Rec rec = new Rec(getApplicationContext(), recordingLength, Fs,speaker , speakerName , frameLength);
                 rec.execute(PATH, FILENAME , FILENAME2,numberOfTest);
 
                 numberOfTest = String.valueOf(Integer.parseInt(numberOfTest) + 1);

@@ -44,7 +44,7 @@ import  static com.example.motta.recorderspeakerspeech.SupportFunctions.printFea
 public class Rec extends AsyncTask<String,Void,String> {
 
     private final String TAG = "Rec";
-    private final double frameLenght = 0.02;
+    private double frameLength = 0;
     private Context context = null;
 
     private int speaker = 0;
@@ -56,22 +56,24 @@ public class Rec extends AsyncTask<String,Void,String> {
     private int nSamplesAlreadyProcessed = 0;
     private float accuracySP1 ;
     private float accuracySP2 ;
+    private float accuracySP3 ;
 
     private short[] audioData = null; //java codifica i campioni audio in degli short 16 bit
     private AudioRecord record = null;
 
     private boolean trainingOrTesting = false;
 
-    public Rec(Context _context, int _recordingLenghtInSec, int _Fs,int _speaker , String _speakerName)
+    public Rec(Context _context, int _recordingLenghtInSec, int _Fs,int _speaker , String _speakerName , Double _frameLength)
     {
 
         speaker = _speaker;
         speakerName = _speakerName;
+        frameLength = _frameLength;
         context = _context;
         recordingLenghtInSec = _recordingLenghtInSec;
         Fs = _Fs;
         nSamples = _recordingLenghtInSec * _Fs;
-        nSamplesPerFrame = (int) (frameLenght * _Fs);
+        nSamplesPerFrame = (int) (frameLength * _Fs);
 
         audioData = new short[nSamples]; //oppure passo direttamente l'array alla main activity per poi gestirlo li
 
@@ -185,7 +187,7 @@ public class Rec extends AsyncTask<String,Void,String> {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         //String numberOfTest = strings[3];
-        int numberOfTrainingSpeakers = 2;
+        int numberOfTrainingSpeakers = 3;
         int totalNumberOfFeatures = 2 * (cepCoeffPerFrame.get(0).length);
         int numberOfFramesPerSpeaker = cepCoeffPerFrame.size();
         int totalNumberOfFrames = numberOfFramesPerSpeaker * numberOfTrainingSpeakers;
@@ -356,7 +358,7 @@ public class Rec extends AsyncTask<String,Void,String> {
                 ArrayList<svm_model> modelList = new ArrayList<>();
 
                 /**/
-                numberOfTrainingSpeakers = 2;
+                numberOfTrainingSpeakers = 3;
                 /**/
 
                 for(int i = 0; i<numberOfTrainingSpeakers;i++)
@@ -389,15 +391,30 @@ public class Rec extends AsyncTask<String,Void,String> {
                     modelList.get(i).SV = data;
                 }
 
-                //svm.svm_save_model(storeDir + "/model.txt",model);
-                check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+                if(speakerName == null){
 
-                while(check.exists()) {
-                    numberOfTest++;
+                    //svm.svm_save_model(storeDir + "/model.txt",model);
                     check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
-                }
 
-                printFeaturesOnFileFormat(cepCoeffPerFrame, deltadelta, storeDir + "/testDataFormat" + speakerName + numberOfTest + ".txt", speaker);
+                    while(check.exists()) {
+                        numberOfTest++;
+                        check = new File( storeDir +"/testDataFormat" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+                    }
+
+                    printFeaturesOnFileFormat(cepCoeffPerFrame, deltadelta, storeDir + "/testDataFormat" + speakerName + numberOfTest + ".txt", speaker);
+
+                }
+                else{
+                    //svm.svm_save_model(storeDir + "/model.txt",model);
+                    check = new File( storeDir +"/" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+
+                    while(check.exists()) {
+                        numberOfTest++;
+                        check = new File( storeDir +"/" + speakerName+ Integer.toString(numberOfTest) + ".txt");
+                    }
+
+                    printFeaturesOnFileFormat(cepCoeffPerFrame, deltadelta, storeDir + "/" + speakerName + numberOfTest + ".txt", speaker);
+                }
 
                 ArrayList<double[]> union = uniteAllFeaturesInOneList(cepCoeffPerFrame, deltadelta);//converto i dati di test in un array di svm_node
                 svm_node[][] testData = new svm_node[numberOfFramesPerSpeaker][totalNumberOfFeatures + 1];
@@ -526,8 +543,10 @@ public class Rec extends AsyncTask<String,Void,String> {
 
                 double temp;
                 int temp2;
+
                 int counter1 = 0;
                 int counter2 = 0;
+                int counter3 = 0;
 
                 for (int i = 0; i<numberOfFramesPerSpeaker ; i++) {
 
@@ -549,6 +568,17 @@ public class Rec extends AsyncTask<String,Void,String> {
                         counter2++;
                     }
                     accuracySP2 = (counter2*100/numberOfFramesPerSpeaker);
+                }
+
+                for (int i = 0; i<numberOfFramesPerSpeaker ; i++) {
+
+                    temp = resultsList.get(2).get(i);
+                    temp2 = (int)temp;
+
+                    if (temp2 == 1){
+                        counter3++;
+                    }
+                    accuracySP3 = (counter3*100/numberOfFramesPerSpeaker);
                 }
 
                 ArrayList<String> names = new ArrayList<>();
@@ -597,7 +627,7 @@ public class Rec extends AsyncTask<String,Void,String> {
                 }
 
 */
-                String recognizedSpeaker = "Speaker 1 = " +(int)accuracySP1 +"% "+"Speaker 2 = " + (int)accuracySP2 + "% ";
+                String recognizedSpeaker = "Speaker 1 = " +(int)accuracySP1 +"% "+"Speaker 2 = " + (int)accuracySP2 + "% "+"Speaker 3 = " + (int)accuracySP3 + "% " ;
                 return recognizedSpeaker;
                 /************************
                 if(maxFrequency >= percentOfAccuracy*numberOfFramesPerSpeaker) {

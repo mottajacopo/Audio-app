@@ -24,7 +24,7 @@
         android:id="@+id/CheckOne"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="8dp"
         android:text="Speaker one"
         app:layout_constraintBottom_toTopOf="@id/CheckTwo"
         app:layout_constraintEnd_toStartOf="parent"
@@ -34,7 +34,7 @@
         android:id="@+id/CheckTwo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="60dp"
+        android:layout_marginBottom="48dp"
         android:text="Speaker two"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="parent"
@@ -53,7 +53,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btt"
-        app:layout_constraintVertical_bias="0.359" />
+        app:layout_constraintVertical_bias="0.214" />
 
     <EditText
         android:id="@+id/editText2"
@@ -69,7 +69,22 @@
         app:layout_constraintHorizontal_bias="0.508"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText"
-        app:layout_constraintVertical_bias="0.06" />
+        app:layout_constraintVertical_bias="0.0" />
+
+    <EditText
+        android:id="@+id/editText4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:hint="insert frame length (default 0.02 sec)"
+        app:layout_constraintBottom_toTopOf="@+id/CheckOne"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editText"
+        app:layout_constraintVertical_bias="0.377" />
 
     <EditText
         android:id="@+id/editText3"
@@ -79,13 +94,13 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:hint="insert your name"
+        android:hint="insert speaker name"
         app:layout_constraintBottom_toTopOf="@+id/CheckOne"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText2"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.558" />
 
 
 </android.support.constraint.ConstraintLayout>

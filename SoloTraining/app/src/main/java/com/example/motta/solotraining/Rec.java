@@ -35,7 +35,7 @@ import static com.example.motta.solotraining.SupportFunctions.uniteAllFeaturesIn
 public class Rec extends AsyncTask<String,Void,String> {
 
     private final String TAG = "Rec";
-    private final double frameLenght = 0.02;
+    private double frameLength = 0;
     private Context context = null;
 
     private int speaker = 0;
@@ -49,15 +49,16 @@ public class Rec extends AsyncTask<String,Void,String> {
     private short[] audioData = null; //java codifica i campioni audio in degli short 16 bit
     private AudioRecord record = null;
 
-    public Rec(Context _context, int _recordingLenghtInSec, int _Fs, int _speaker , String _speakerName)
+    public Rec(Context _context, int _recordingLenghtInSec, int _Fs, int _speaker , String _speakerName, Double _frameLength)
     {
         speaker = _speaker;
         speakerName = _speakerName;
         context = _context;
+        frameLength = _frameLength;
         recordingLenghtInSec = _recordingLenghtInSec;
         Fs = _Fs;
         nSamples = _recordingLenghtInSec * _Fs;
-        nSamplesPerFrame = (int) (frameLenght * _Fs);
+        nSamplesPerFrame = (int) (frameLength * _Fs);
 
         audioData = new short[nSamples]; //oppure passo direttamente l'array alla main activity per poi gestirlo li
 

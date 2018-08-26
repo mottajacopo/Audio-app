@@ -19,7 +19,7 @@
 option = '-t 2 -c 1 -g 0.006';
 
 %mettere norm = 0 per normalizzare tra -1 e 1
-norm = 0;
+norm = 1;
 if(norm == 0)
     option = '-t 2 -c 12 -g 0.03';
 end

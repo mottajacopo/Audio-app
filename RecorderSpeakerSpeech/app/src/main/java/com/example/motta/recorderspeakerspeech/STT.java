@@ -47,7 +47,7 @@ public class STT extends AsyncTask<String, String, Void> {
 
         String _path = strings[0];
         String _filename = strings[1];
-        File file = new File(Environment.getExternalStorageDirectory() + "/" + _path + "/" + _filename);
+        File file = new File(Environment.getExternalStorageDirectory() + "/" + _path + "/" + _filename + ".wav");
 
         try{
             InputStream audio = new FileInputStream(file);
