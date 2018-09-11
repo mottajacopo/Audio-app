@@ -9,6 +9,8 @@ import android.widget.Toast;
 import com.ibm.watson.developer_cloud.http.HttpMediaType;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.SpeechToText;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionAlternative;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResult;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResults;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.websocket.BaseRecognizeCallback;
 
@@ -16,14 +18,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class STT extends AsyncTask<String, String, Void> {
 
+    private List<SpeechRecognitionAlternative> alternatives = null;
     private static final String TAG = "STT";
-    private Context mContext;
-    private String temp;
-    private boolean result;
+    private Context mContext = null;
+    private boolean result = false;
+    private String recognizedPhrase = null;
 
     public STT(Context context){
         mContext = context;
@@ -33,7 +38,7 @@ public class STT extends AsyncTask<String, String, Void> {
     protected void onPreExecute() {
         super.onPreExecute();
 
-        Toast.makeText(mContext,"Start verification", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext,"Starting verification", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -60,6 +65,7 @@ public class STT extends AsyncTask<String, String, Void> {
                 public void onTranscription(SpeechRecognitionResults transcript) {
                     System.out.println(transcript);
 
+                    /*
                     boolean result = false;
 
                     for(int i =0; i< transcript.getResults().size(); i++)
@@ -69,11 +75,20 @@ public class STT extends AsyncTask<String, String, Void> {
                             result = true;
                         }
                     }
+                    */
+
+                    alternatives = transcript.getResults().get(0).getAlternatives();
 
                 }
             });
             //delay 10 sec
             Thread.currentThread().sleep(10000);
+
+            String expectedPhrase = "my voice is my password open the door";
+
+
+            result = SupportFunctions.verifyPhrase(alternatives,expectedPhrase,recognizedPhrase);
+            recognizedPhrase = SupportFunctions.recognizedPhrase(alternatives,expectedPhrase,result);
         }
         catch (FileNotFoundException e){
             Log.e(TAG,"File not found");
@@ -88,10 +103,10 @@ public class STT extends AsyncTask<String, String, Void> {
         super.onPostExecute(aVoid);
 
         if(result) {
-            Toast.makeText(mContext, "Verification succeeded", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "Succeeded: " + recognizedPhrase, Toast.LENGTH_LONG).show();
         }
         else{
-            Toast.makeText(mContext, "Verification failed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "Failed: " + recognizedPhrase, Toast.LENGTH_LONG).show();
         }
     }
 }

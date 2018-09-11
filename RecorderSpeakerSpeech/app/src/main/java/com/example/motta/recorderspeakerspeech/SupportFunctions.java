@@ -2,6 +2,9 @@ package com.example.motta.recorderspeakerspeech;
 
 import android.util.Log;
 
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionAlternative;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResult;
+
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -13,10 +16,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import libsvm.svm;
 import libsvm.svm_node;
+import libsvm.svm_model;
 
 /**
  * Created by MyPC on 26/05/2018.
@@ -457,6 +463,139 @@ public class SupportFunctions {
         }
 
         return  normVal;
+    }
+
+    public static void matlabModelToAndroidModel(svm_model matlabModel/*matlab model loaded from memory*/)
+    {
+            int totalNumberOfFeatures = matlabModel.SV[0].length;
+
+            svm_node[][] data = new svm_node[matlabModel.SV.length][totalNumberOfFeatures +1];
+
+            for(int j = 0; j< matlabModel.SV.length; j++)
+            {
+                for(int k = 0; k < totalNumberOfFeatures; k++)
+                {
+                    svm_node node = new svm_node();
+                    node.index = matlabModel.SV[j][k].index - 1;
+                    node.value = matlabModel.SV[j][k].value;
+                    data[j][k] = node;
+                }
+
+                svm_node finalNode = new svm_node();
+                finalNode.index = -1;
+                finalNode.value = 0;
+                data[j][totalNumberOfFeatures] = finalNode;
+            }
+
+            matlabModel.SV = data;
+    }
+
+    public static boolean verifyPhrase(List<SpeechRecognitionAlternative> alternatives, String expectedPhrase, String output)
+    {
+
+        String[] expectedWords = expectedPhrase.split(" ");
+        ArrayList<String> expectedWordsList = new ArrayList<String>(Arrays.asList(expectedWords));
+
+        int totalWords = expectedWords.length;
+        int count = 0;
+
+        String recognizedPhrase = null;
+        String transcript = null;
+        ArrayList<String> wordsArray = null;
+
+        boolean result = false;
+
+
+        for(int i = 0; i< alternatives.size(); i++)
+        {
+            transcript = alternatives.get(i).getTranscript();
+            recognizedPhrase = transcript.substring(0,transcript.length()-1);
+
+
+            wordsArray = new ArrayList<String>(Arrays.asList(recognizedPhrase.split(" ")));
+
+
+            for(int k = 0; k< expectedWordsList.size(); k++)
+            {
+                if(wordsArray.contains(expectedWordsList.get(k)))
+                {
+                    wordsArray.remove(expectedWordsList.get(k));
+                    count++;
+                }
+
+            }
+
+            if(count/totalWords >= 0.7 )
+            {
+                result = true;
+                break;
+            }
+
+            count = 0;
+
+        }
+
+        return result;
+
+    }
+
+    public static String recognizedPhrase(List<SpeechRecognitionAlternative> alternatives, String expectedPhrase, boolean recognitionResult)
+    {
+        ArrayList<String> expectedWordsList= new ArrayList<>(Arrays.asList(expectedPhrase.split(" ")));
+        int totalWords = expectedWordsList.size();
+        int count = 0;
+
+        String transcript = null;
+        String recognizedPhrase = null;
+        ArrayList<String> wordsArray = null;
+
+        if(recognitionResult)
+        {
+            for(int i = 0; i< alternatives.size(); i++)
+            {
+                transcript = alternatives.get(i).getTranscript();
+                recognizedPhrase = transcript.substring(0,transcript.length()-1);
+
+                wordsArray = new ArrayList<String>(Arrays.asList(recognizedPhrase.split(" ")));
+
+                for(int k = 0; k< expectedWordsList.size(); k++)
+                {
+                    if(wordsArray.contains(expectedWordsList.get(k)))
+                    {
+                        wordsArray.remove(expectedWordsList.get(k));
+                        count++;
+                    }
+
+                }
+
+                if(count/totalWords >= 0.7 )
+                {
+                    break;
+                }
+
+                count = 0;
+            }
+        }
+        else
+        {
+            double maxConfidence = 0;
+            int index = 0;
+
+            for(int i = 0; i< alternatives.size(); i++)
+            {
+                if(alternatives.get(i).getConfidence() > maxConfidence)
+                {
+                    maxConfidence = alternatives.get(i).getConfidence();
+                    index = i;
+                }
+            }
+
+            transcript = alternatives.get(index).getTranscript();
+            recognizedPhrase = transcript.substring(0,transcript.length()-1);
+
+        }
+
+        return recognizedPhrase;
     }
     }
 
