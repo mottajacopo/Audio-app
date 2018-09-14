@@ -2,8 +2,8 @@ function [ model , instance_matrix ,normValsOut ] = generate_model (file , optio
 
     [label_vector, instance_matrix] = libsvmread(file);
     
-    label_vector(1:299) = 1;
-    label_vector(299 +1:end) = 2;
+    label_vector(1:399) = 1;
+    label_vector(399 +1:end) = 2;
     
     normValsOut = 0;
     
