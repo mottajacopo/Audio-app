@@ -1,6 +1,6 @@
 function testing2(model,normValsOut)
 
-%     folder = 'frase3';
+    folder = 'frase3';
 % 
 %     for i=1:1:10    
 %     file = strcat('MJ',int2str(i),'.txt');
