@@ -24,7 +24,7 @@ if(norm == 0)
     option = '-t 2 -c 12 -g 0.03';
 end
 
-[ model , instance_matrix ,normValsOut] = generate_model ('modelMB15x.txt' , option, norm);
+[ model , instance_matrix ,normValsOut] = generate_model ('modelMBMJCC.txt' , option, norm);
 
 %libsvmwrite('modelSpeaker3.txt', modelMT.sv_coef, modelMT.SVs);
 %testing1(model);  %model from frase1
