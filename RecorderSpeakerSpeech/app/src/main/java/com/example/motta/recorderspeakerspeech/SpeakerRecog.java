@@ -3,7 +3,9 @@ package com.example.motta.recorderspeakerspeech;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
+
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -23,6 +25,7 @@ import static com.example.motta.recorderspeakerspeech.SupportFunctions.computeDe
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.convertFloatsToDoubles;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.matlabModelToAndroidModel;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.readTestDataFromFormatFile;
+import static com.example.motta.recorderspeakerspeech.SupportFunctions.scaleTestData;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.uniteAllFeaturesInOneList;
 
 /**
@@ -41,8 +44,9 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
     private int recordingLengthInSec = 0;
     private int nSamples = 0;
     private int nSamplesPerFrame = 0;
+    private TextView textView = null;
 
-    public SpeakerRecog(Context _context/*, /*short[] _samples*/, int _Fs, int _recordingLengthInSec)
+    public SpeakerRecog(Context _context/*, /*short[] _samples*/, int _Fs, int _recordingLengthInSec, TextView _textView)
     {
         context = _context;
         Fs = _Fs;
@@ -50,7 +54,10 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
         nSamples =  recordingLengthInSec*Fs;
         nSamplesPerFrame = (int)(frameLength*Fs);
+
+        textView = _textView;
     }
+
 
     @Override
     protected void onPreExecute() {
@@ -88,10 +95,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
         for(int i = 0;  i < length; i++)
         {
-            if(i == 23998)
-            {
-                int a = 0;
-            }
+
             value = (short) (((short) readWav.myData[2*i] & 0x00ff) | ((short)readWav.myData[(2*i)+1]<<8 & 0xff00));
 
             samples[i] = value;
@@ -196,6 +200,8 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
                 //testData = readTestDataFromFormatFile(storeDir + "/Jacopo21.txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
 
+                testData = readTestDataFromFormatFile(path + "/CC1.txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
+
                 ArrayList<ArrayList<Double>> resultsList = new ArrayList<>();
 
                 double res;
@@ -206,15 +212,14 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
                     int speaker = j + 1;
                     resultsList.add(j,new ArrayList<Double>());
 
-                    loadedModel = svm.svm_load_model(new BufferedReader(new FileReader(path + "/modelSpeaker" + String.valueOf(speaker) + ".txt")));
+                    loadedModel = svm.svm_load_model(new BufferedReader(new FileReader(path + "/modelMultiSpeaker" + String.valueOf(speaker) + ".txt")));
                     matlabModelToAndroidModel(loadedModel);
 
-
-                    //scaledTestData = scaleTestData(testData,speaker,storeDir);
+                    scaledTestData = scaleTestData(testData,speaker,path,1);
 
                     for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
 
-                        res = svm.svm_predict(loadedModel,testData[i]);
+                        res = svm.svm_predict(loadedModel,scaledTestData[i]);
                         resultsList.get(j).add(i, res);
                     }
                 }
@@ -239,8 +244,8 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
                 names.add(2,"Speaker Three MT");
 
                 ArrayList<Double> percentages = new ArrayList<>();
-                percentages.add(0,0.0);
-                percentages.add(1,0.7);
+                percentages.add(0,0.8);
+                percentages.add(1,0.8);
                 percentages.add(2,0.9);
 
 
@@ -257,7 +262,9 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
                 /**/
 
-                String recognizedSpeaker = "Unknown" + ", not speaker" + String.valueOf(relativeFrequencies.indexOf(relativeFrequenciesCopy.get(0)) + 1) + " for " + String.valueOf(-relativeFrequenciesCopy.get(0)) + " frames";
+                String recognizedSpeaker = "Unknown" + ", not speaker" + String.valueOf(relativeFrequencies.indexOf(relativeFrequenciesCopy.get(0)) + 1) + " for " + String.valueOf(-relativeFrequenciesCopy.get(0)) + " frames in multi";
+
+                int recogSpeaker = -1;
 
                 for(int j = 0; j< numberOfTrainingSpeakers; j++)
                 {
@@ -265,12 +272,44 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
                     if(frequencies.get(j) > percentages.get(speaker -1)*numberOfFramesPerSpeaker)
                     {
-                        recognizedSpeaker = names.get(speaker - 1) + " for " + String.valueOf(relativeFrequenciesCopy.get(j)) + " frames";
+                        //recognizedSpeaker = names.get(speaker - 1) + " for " + String.valueOf(relativeFrequenciesCopy.get(j)) + " frames";
+                        recogSpeaker = j + 1;
                         break;
                     }
 
                 }
 
+
+                if(recogSpeaker != -1)
+                {
+                    svm_model oneClassModel = svm.svm_load_model(path + "/modelOneSpeaker" + String.valueOf(recogSpeaker) + ".txt");
+                    matlabModelToAndroidModel(oneClassModel);
+
+                    double predictedLabel = 0;
+                    int count = 0;
+
+                    ArrayList<Double> oneClassThr = new ArrayList<>();
+                    oneClassThr.add(0, 0.05);
+                    oneClassThr.add(1, 0.08);
+
+
+                    scaledTestData = scaleTestData(testData,recogSpeaker,path,0);
+
+                    for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
+                        predictedLabel = svm.svm_predict(oneClassModel, scaledTestData[i]);
+                        if (predictedLabel == 1) {
+                            count++;
+                        }
+                    }
+
+                    if (((double) count) / numberOfFramesPerSpeaker >= oneClassThr.get(recogSpeaker - 1)) {
+                        recognizedSpeaker = names.get(recogSpeaker-1) + "for " + String.valueOf(relativeFrequencies.get(recogSpeaker-1) + " frames in multi and " + String.valueOf(count-oneClassThr.get(recogSpeaker-1)*numberOfFramesPerSpeaker) + " frames in oneC");
+                    }
+                    else
+                    {
+                        recognizedSpeaker = "Unknown, not speaker " + String.valueOf(recogSpeaker) + " for " + String.valueOf(oneClassThr.get(recogSpeaker-1)*numberOfFramesPerSpeaker-count) + " frames in oneC";
+                    }
+                }
 
                 return recognizedSpeaker;
 
@@ -289,6 +328,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
     protected void onPostExecute(String recognizedSpeaker) {
         super.onPostExecute(recognizedSpeaker);
 
-        Toast.makeText(context,recognizedSpeaker,Toast.LENGTH_LONG).show();
+        //Toast.makeText(context,recognizedSpeaker,Toast.LENGTH_LONG).show();
+        textView.setText(recognizedSpeaker);
     }
 }

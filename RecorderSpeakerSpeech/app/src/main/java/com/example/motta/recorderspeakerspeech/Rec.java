@@ -6,34 +6,12 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 
-import be.tarsos.dsp.AudioEvent;
-import be.tarsos.dsp.io.TarsosDSPAudioFormat;
-import be.tarsos.dsp.mfcc.MFCC;
-import libsvm.svm;
-import libsvm.svm_model;
-import libsvm.svm_node;
-import libsvm.svm_parameter;
-import libsvm.svm_problem;
 
-import  static com.example.motta.recorderspeakerspeech.SupportFunctions.computeDeltas;
-import  static com.example.motta.recorderspeakerspeech.SupportFunctions.convertFloatsToDoubles;
-import  static com.example.motta.recorderspeakerspeech.SupportFunctions.printFeaturesOnFile;
-import static com.example.motta.recorderspeakerspeech.SupportFunctions.readTestDataFromFormatFile;
-import static com.example.motta.recorderspeakerspeech.SupportFunctions.scaleTestData;
-import static com.example.motta.recorderspeakerspeech.SupportFunctions.scaleTrainingData;
-import  static com.example.motta.recorderspeakerspeech.SupportFunctions.uniteAllFeaturesInOneList;
-import  static com.example.motta.recorderspeakerspeech.SupportFunctions.printFeaturesOnFileFormat;
 /**
  * Created by Giulia on 11/04/2018.
  */
@@ -47,21 +25,20 @@ public class Rec extends AsyncTask<String,Void,Void> {
     private int recordingLenghtInSec = 0;
     private int Fs = 0; //freq di campionamento
     private int nSamples = 0;
-    private  int nSamplesPerFrame = 0;
+    //private  int nSamplesPerFrame = 0;
     private short[] audioData = null; //java codifica i campioni audio in degli short 16 bit
     private AudioRecord record = null;
 
-    public Rec(Context _context, int _recordingLenghtInSec, int _Fs, short[] _samplesOut)
+    public Rec(Context _context, int _recordingLenghtInSec, int _Fs)
     {
 
         context = _context;
         recordingLenghtInSec = _recordingLenghtInSec;
         Fs = _Fs;
-        nSamples = _recordingLenghtInSec * _Fs;
-        nSamplesPerFrame = (int) (frameLenght * _Fs);
+        nSamples = recordingLenghtInSec * Fs;
+        //nSamplesPerFrame = (int) (frameLenght * _Fs);
 
-        ////audioData = new short[nSamples]; //oppure passo direttamente l'array alla main activity per poi gestirlo li
-        audioData = _samplesOut;
+        audioData = new short[nSamples]; //oppure passo direttamente l'array alla main activity per poi gestirlo li
 
         record = new AudioRecord(MediaRecorder.AudioSource.MIC, Fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,2*nSamples);//il buffer in byte dovrà essere il doppio della dimensione dell array
 
@@ -81,6 +58,52 @@ public class Rec extends AsyncTask<String,Void,Void> {
         String _path = strings[0];
         String _fileName = strings[1]; //usato per il file .wav e STT
 
+
+/*
+        svm_node[][] data =  readTestDataFromFormatFile(Environment.getExternalStorageDirectory() + "/" + _path + "/1.txt",299*2,26);
+        svm_node[][] scaledData = scaleTrainingData(data,Environment.getExternalStorageDirectory() + "/" + _path,1,0);
+
+        svm_problem p = new svm_problem();
+        double[] lab = new double[299*2];
+        for(int i = 0; i< 299*2;i++)
+        {
+            lab[i] = 1;
+        }
+        p.x = scaledData;
+        p.l = 1;
+        p.y = lab;
+
+        svm_parameter par = new svm_parameter();
+        par.svm_type = 2;
+        par.kernel_type = 2;
+        par.gamma = 0.005;
+        par.nu = 0.8;
+
+        svm_model mod = new svm_model();
+        mod = svm.svm_train(p,par);
+
+        try {
+            svm.svm_save_model(Environment.getExternalStorageDirectory() + "/" + _path + "/ex1.txt", mod);
+        }
+        catch (IOException e)
+        {
+          int a = 0;
+        }
+
+        data = readTestDataFromFormatFile(Environment.getExternalStorageDirectory() + "/" + _path + "/2.txt",299*3,26);
+        scaledData = scaleTrainingData(data,Environment.getExternalStorageDirectory() + "/" + _path,2,0);
+*/
+
+/*
+        for(int i = 0; i< 2;i++)
+        {
+            int speaker = i + 1;
+            svm_node[][] data = readTestDataFromFormatFile(Environment.getExternalStorageDirectory() + "/" + _path + "/" + String.valueOf(speaker) + ".txt",1196,26);
+            svm_node[][] scaledData = scaleTrainingData(data,Environment.getExternalStorageDirectory() + "/" + _path,speaker);
+
+        }
+*/
+
         String storeDir = Environment.getExternalStorageDirectory() + "/" + _path;
 
         File f = new File(storeDir);
@@ -90,6 +113,7 @@ public class Rec extends AsyncTask<String,Void,Void> {
                 Log.e(TAG, "Cannot create directory");
             }
         }
+
 
         record.startRecording(); //apre il record dalla sorgente indicata con MIC
         record.read(audioData, 0, nSamples);//inizia la lettura e la finisce

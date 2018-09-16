@@ -4,13 +4,13 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ibm.watson.developer_cloud.http.HttpMediaType;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.SpeechToText;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionAlternative;
-import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResult;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResults;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.websocket.BaseRecognizeCallback;
 
@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -29,9 +28,12 @@ public class STT extends AsyncTask<String, String, Void> {
     private Context mContext = null;
     private boolean result = false;
     private String recognizedPhrase = null;
+    private TextView textView = null;
 
-    public STT(Context context){
+    public STT(Context context, TextView _textView)
+    {
         mContext = context;
+        textView = _textView;
     }
 
     @Override
@@ -87,7 +89,7 @@ public class STT extends AsyncTask<String, String, Void> {
             String expectedPhrase = "my voice is my password open the door";
 
 
-            result = SupportFunctions.verifyPhrase(alternatives,expectedPhrase,recognizedPhrase);
+            result = SupportFunctions.verifyPhrase(alternatives,expectedPhrase);
             recognizedPhrase = SupportFunctions.recognizedPhrase(alternatives,expectedPhrase,result);
         }
         catch (FileNotFoundException e){
@@ -103,10 +105,12 @@ public class STT extends AsyncTask<String, String, Void> {
         super.onPostExecute(aVoid);
 
         if(result) {
-            Toast.makeText(mContext, "Succeeded: " + recognizedPhrase, Toast.LENGTH_LONG).show();
+            //Toast.makeText(mContext, "Succeeded: " + recognizedPhrase, Toast.LENGTH_LONG).show();
+            textView.setText("Succeeded: " + recognizedPhrase);
         }
         else{
-            Toast.makeText(mContext, "Failed: " + recognizedPhrase, Toast.LENGTH_LONG).show();
+            //Toast.makeText(mContext, "Failed: " + recognizedPhrase, Toast.LENGTH_LONG).show();
+            textView.setText("Failed: " + recognizedPhrase);
         }
     }
 }

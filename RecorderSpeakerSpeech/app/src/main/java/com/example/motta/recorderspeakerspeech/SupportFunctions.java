@@ -3,24 +3,19 @@ package com.example.motta.recorderspeakerspeech;
 import android.util.Log;
 
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionAlternative;
-import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResult;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import libsvm.svm;
 import libsvm.svm_node;
 import libsvm.svm_model;
 
@@ -311,9 +306,20 @@ public class SupportFunctions {
 
     }
 
-    public static svm_node[][] scaleTestData(svm_node[][] testDataToBeScaled,int speaker,String storeDir)
+    public static svm_node[][] scaleTestData(svm_node[][] testDataToBeScaled,int speaker,String storeDir,int typeOfSvm)//1 for multi 0 for oneClass -> one class and multi class training has different normVals
     {
-        String fileDir = storeDir + "/normValues.txt";
+        String fileSelected = null;
+
+        if(typeOfSvm == 1)
+        {
+            fileSelected = "/normValuesMulti.txt";
+        }
+        else
+        {
+            fileSelected = "/normValuesOne.txt";
+        }
+
+        String fileDir = storeDir + fileSelected;
 
         int numberOfFeatures = testDataToBeScaled[0].length -1;
         int numberOfFrames = testDataToBeScaled.length;
@@ -337,7 +343,7 @@ public class SupportFunctions {
 
                 svm_node node = new svm_node();
                 node.index = i;
-                node.value = (testDataToBeScaled[j][i].value - normValues[1][i])/(normValues[0][i] - normValues[1][i]);
+                node.value = ((testDataToBeScaled[j][i].value - normValues[1][i])/(normValues[0][i] - normValues[1][i])*2 -1);
                 scaledData[j][i] = node;
             }
         }
@@ -345,9 +351,20 @@ public class SupportFunctions {
         return scaledData;
     }
 
-    public static svm_node[][] scaleTrainingData(svm_node[][] trainingDataToBeScaled,String storeDir,int speaker)
+    public static svm_node[][] scaleTrainingData(svm_node[][] trainingDataToBeScaled,String storeDir,int speaker, int typeOfSvm)
     {
-        String normValFileDir = storeDir + "/normValues.txt";
+        String fileSelected = null;
+
+        if(typeOfSvm == 1)
+        {
+            fileSelected = "/normValuesMulti.txt";
+        }
+        else
+        {
+            fileSelected = "/normValuesOne.txt";
+        }
+
+        String normValFileDir = storeDir + fileSelected;
 
         int numberOfFeatures = trainingDataToBeScaled[0].length -1;
         int numberOfFrames = trainingDataToBeScaled.length;
@@ -386,7 +403,7 @@ public class SupportFunctions {
 
                 svm_node node = new svm_node();
                 node.index = i;
-                node.value = (trainingDataToBeScaled[k][i].value - minValue)/(maxValue-minValue);
+                node.value = ((trainingDataToBeScaled[k][i].value - minValue)/(maxValue-minValue))*2 - 1;
                 scaledData[k][i] = node;
             }
         }
@@ -490,7 +507,7 @@ public class SupportFunctions {
             matlabModel.SV = data;
     }
 
-    public static boolean verifyPhrase(List<SpeechRecognitionAlternative> alternatives, String expectedPhrase, String output)
+    public static boolean verifyPhrase(List<SpeechRecognitionAlternative> alternatives, String expectedPhrase)
     {
 
         String[] expectedWords = expectedPhrase.split(" ");
@@ -525,7 +542,7 @@ public class SupportFunctions {
 
             }
 
-            if(count/totalWords >= 0.7 )
+            if(((double)count)/totalWords >= 0.75 )
             {
                 result = true;
                 break;
@@ -568,7 +585,7 @@ public class SupportFunctions {
 
                 }
 
-                if(count/totalWords >= 0.7 )
+                if(count/totalWords >= 0.75 )
                 {
                     break;
                 }
