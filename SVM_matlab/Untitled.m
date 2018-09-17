@@ -21,10 +21,10 @@ option = '-t 2 -c 1 -g 0.006';
 %mettere norm = 0 per normalizzare tra -1 e 1
 norm = 0;
 if(norm == 0)
-    option = '-t 2 -c 12 -g 0.03';
+    option = '-t 2 -c 12 -g 0.005 -s 2 -n 0.8';
 end
 
-[ model , instance_matrix ,normValsOut] = generate_model ('modelMBMJCC.txt' , option, norm);
+[ model , instance_matrix ,normValsOut] = generate_model ('modelMBone.txt' , option, norm);
 
 %libsvmwrite('modelSpeaker3.txt', modelMT.sv_coef, modelMT.SVs);
 %testing1(model);  %model from frase1

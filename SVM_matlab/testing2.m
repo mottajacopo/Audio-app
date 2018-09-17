@@ -58,5 +58,13 @@ function testing2(model,normValsOut)
     file = strcat('CC',int2str(i),'.txt');
     read_predict (model , file , folder , 399,normValsOut);
     end
+    
+     folder = 'rec no mic\AG\0.015';
+    for i=1:1:13
+    file = strcat('AG',int2str(i),'.txt');
+    read_predict (model , file , folder , 399,normValsOut);
+    end
+    
+    
 
 end
