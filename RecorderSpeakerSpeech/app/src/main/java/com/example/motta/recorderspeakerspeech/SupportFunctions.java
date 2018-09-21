@@ -19,9 +19,6 @@ import java.util.List;
 import libsvm.svm_node;
 import libsvm.svm_model;
 
-/**
- * Created by MyPC on 26/05/2018.
- */
 
 public class SupportFunctions {
 

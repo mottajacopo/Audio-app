@@ -28,25 +28,21 @@ import static com.example.motta.recorderspeakerspeech.SupportFunctions.readTestD
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.scaleTestData;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.uniteAllFeaturesInOneList;
 
-/**
- * Created by MyPC on 30/08/2018.
- */
 
 public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
-    private final double frameLength = 0.02;
-    private final double overlapPercentage = 0.5;
-    private final boolean trainingOrTesting = false;
+    private final double frameLength = 0.02;// lunghezza frame in secondi
+    private final double overlapPercentage = 0.5;//percentuale sovrapp. dei frame
 
     private Context context = null;
-    private short[] samples = null;
+    private short[] samples = null;//campioni letti dal file .wav
     private int Fs = 0;
     private int recordingLengthInSec = 0;
     private int nSamples = 0;
     private int nSamplesPerFrame = 0;
     private TextView textView = null;
 
-    public SpeakerRecog(Context _context/*, /*short[] _samples*/, int _Fs, int _recordingLengthInSec, TextView _textView)
+    public SpeakerRecog(Context _context, int _Fs, int _recordingLengthInSec, TextView _textView)
     {
         context = _context;
         Fs = _Fs;
@@ -54,6 +50,8 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
         nSamples =  recordingLengthInSec*Fs;
         nSamplesPerFrame = (int)(frameLength*Fs);
+
+        samples = new short[nSamples];
 
         textView = _textView;
     }
@@ -74,29 +72,27 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
         WavIO readWav = new WavIO(filePath);
 
-        try {
+        try {//provo a leggere il file .wav
 
             boolean success = readWav.read();
 
-            if (!success) {
+            if (!success) {//se la lettura non va a buon fine lnacio un'eccezione
                 throw new IOException("Error while reading .wav file");
             }
 
         }
         catch (IOException exception){
             Log.e("Speaker Recognition",exception.getMessage());
-            return null;
+            return null;//se è stata generata l'eccezione esco dal doInBackground
         }
 
 
-        int length = readWav.myData.length/2;
-        samples = new short[length];
         short value = 0;
 
-        for(int i = 0;  i < length; i++)
+        for(int i = 0;  i < nSamples; i++)//ricostruisco i campioni originali a partire dai byte salvati nel file .wav
         {
 
-            value = (short) (((short) readWav.myData[2*i] & 0x00ff) | ((short)readWav.myData[(2*i)+1]<<8 & 0xff00));
+            value = (short) (((short) readWav.myData[2*i] & 0x00ff) | ((short)readWav.myData[(2*i)+1]<<8 & 0xff00));//ricostruisco il campione a 16 bit unendo i primi 2 byte di myData
 
             samples[i] = value;
         }
@@ -109,26 +105,26 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 //framing audio data
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        ArrayList<float[]> floatSamplesPerFrame = new ArrayList<>();
+        ArrayList<float[]> floatSamplesPerFrame = new ArrayList<>();//lista contenete i frame
 
-        while (nSamples - nSamplesAlreadyProcessed >= nSamplesPerFrame/2/*nSamplesPerFrame-nSamplesOverlapped*/) { //fino a che trovo blocchi lunghi nsamplesperframe mezzi
+        while (nSamples - nSamplesAlreadyProcessed >= nSamplesPerFrame-nSamplesOverlapped) { //dato l'overlapping per ogni frame avanzo di nSamplesPerFrame-nSamplesOverlapped frames
 
-            float[] temp = new float[nSamplesPerFrame];
+            float[] frame = new float[nSamplesPerFrame];
 
             for (int i = 0; i < nSamplesPerFrame; i++) {
 
 
-                temp[i] = samples[i + nSamplesAlreadyProcessed -(80*(nSamplesAlreadyProcessed/nSamplesPerFrame))];
+                frame[i] = samples[i + nSamplesAlreadyProcessed -(nSamplesOverlapped*(nSamplesAlreadyProcessed/nSamplesPerFrame))];
             }
 
-            floatSamplesPerFrame.add(temp);
+            floatSamplesPerFrame.add(frame);
 
             if(nSamplesAlreadyProcessed == 0) {
 
-                nSamplesAlreadyProcessed = nSamplesPerFrame;
+                nSamplesAlreadyProcessed = nSamplesPerFrame;//se sono al primo frame i nuovi campioni considerati sono nSamplesPerFrame
             }
             else {
-                nSamplesAlreadyProcessed += nSamplesPerFrame/2;
+                nSamplesAlreadyProcessed += nSamplesPerFrame-nSamplesOverlapped;//negli altri casi i nuovi campioni sono nSamplesPerFrame-nSamplesOverlapped
             }
         }
 

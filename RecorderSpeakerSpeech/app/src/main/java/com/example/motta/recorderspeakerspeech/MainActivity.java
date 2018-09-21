@@ -12,13 +12,13 @@ public class MainActivity extends AppCompatActivity {
     Button btnRec = null;
     Button bttStt = null;
     Button bttSpk = null;
-    TextView textView = null;
+    TextView textView = null;//textView per stampare i messaggi di risultato
 
-    private final String PATH = "Audio recognition files multi";
-    private final String FILENAME = "rec.wav";
+    private final String PATH = "Audio recognition files multi";//nome cartella contenente tutti i file per speaker e speech recog.
+    private final String FILENAME = "rec.wav";//nome file .wav
 
-    private final int Fs = 8000;
-    private final int recordingLength = 3;
+    private final int Fs = 8000;//frequenza di campionamento
+    private final int recordingLength = 3;//lunghezza registraz. in secondi
 
 
     @Override
