@@ -99,7 +99,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
 
         int nSamplesAlreadyProcessed = 0;
-        int nSamplesOverlapped = (int)overlapPercentage*nSamplesPerFrame;
+        int nSamplesOverlapped = (int)(overlapPercentage*nSamplesPerFrame);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //framing audio data
@@ -107,21 +107,25 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
         ArrayList<float[]> floatSamplesPerFrame = new ArrayList<>();//lista contenete i frame
 
+        int samplesBack = 0;//per il primo frame (da 0 a nSamplesPerFrame campioni) non devo realizzare overlapping con il frame precedente
+
         while (nSamples - nSamplesAlreadyProcessed >= nSamplesPerFrame-nSamplesOverlapped) { //dato l'overlapping per ogni frame avanzo di nSamplesPerFrame-nSamplesOverlapped frames
 
             float[] frame = new float[nSamplesPerFrame];
 
+
             for (int i = 0; i < nSamplesPerFrame; i++) {
 
-
-                frame[i] = samples[i + nSamplesAlreadyProcessed -(nSamplesOverlapped*(nSamplesAlreadyProcessed/nSamplesPerFrame))];
+                frame[i] = samples[i + nSamplesAlreadyProcessed - samplesBack];
             }
+
 
             floatSamplesPerFrame.add(frame);
 
-            if(nSamplesAlreadyProcessed == 0) {
+            if(nSamplesAlreadyProcessed == 0) {//se sono al primo frame
 
-                nSamplesAlreadyProcessed = nSamplesPerFrame;//se sono al primo frame i nuovi campioni considerati sono nSamplesPerFrame
+                nSamplesAlreadyProcessed = nSamplesPerFrame;//i nuovi campioni considerati sono nSamplesPerFrame
+                samplesBack = nSamplesOverlapped;//i frame successivi al primo possono considerare nSamplesOverlapped campioni dal frame precedente
             }
             else {
                 nSamplesAlreadyProcessed += nSamplesPerFrame-nSamplesOverlapped;//negli altri casi i nuovi campioni sono nSamplesPerFrame-nSamplesOverlapped
@@ -164,8 +168,6 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
 
                 try{
-                //svm.svm_save_model(storeDir + "/model.txt",model);
-
 
                 //printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, storeDir + "/testDataFormat" + numberOfTest + ".txt",speaker);
 
