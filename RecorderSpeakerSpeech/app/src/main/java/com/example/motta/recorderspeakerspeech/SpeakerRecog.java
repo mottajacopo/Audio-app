@@ -31,6 +31,7 @@ import static com.example.motta.recorderspeakerspeech.SupportFunctions.uniteAllF
 
 public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
+    private static final String TAG = "SPEAKERREC";
     private final double frameLength = 0.02;// lunghezza frame in secondi
     private final double overlapPercentage = 0.5;//percentuale sovrapp. dei frame
 
@@ -82,7 +83,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
         }
         catch (IOException exception){
-            Log.e("Speaker Recognition",exception.getMessage());
+            Log.e(TAG,exception.getMessage());
             return null;//se è stata generata l'eccezione esco dal doInBackground
         }
 
@@ -163,20 +164,14 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
         int numberOfFramesPerSpeaker = cepCoeffPerFrame.size();
 
 
-
-                /**/
-
-
                 try{
 
-                //printFeaturesOnFileFormat(cepCoeffPerFrame,deltadelta, storeDir + "/testDataFormat" + numberOfTest + ".txt",speaker);
 
+                ArrayList<double[]> union = uniteAllFeaturesInOneList(cepCoeffPerFrame, deltadelta);//unisco mfcc e delta-delta per un totale di 26 features
+                svm_node[][] testData = new svm_node[numberOfFramesPerSpeaker][totalNumberOfFeatures + 1];//converto i dati di test in un array di svm_node
+                svm_node[][] scaledTestData = null;
 
-                ArrayList<double[]> union = uniteAllFeaturesInOneList(cepCoeffPerFrame, deltadelta);//converto i dati di test in un array di svm_node
-                svm_node[][] testData = new svm_node[numberOfFramesPerSpeaker][totalNumberOfFeatures + 1];
-                svm_node[][] scaledTestData = new svm_node[numberOfFramesPerSpeaker][totalNumberOfFeatures +1];
-
-                for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
+                for (int i = 0; i < numberOfFramesPerSpeaker; i++) {//riempio la matrice degli svm_node con i valori delle features
 
                     for (int j = 0; j < totalNumberOfFeatures; j++) {
 
@@ -184,41 +179,37 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
                         node.index = j;
                         node.value = union.get(i)[j];
 
-                        testData[i][j] = node;
+                        testData[i][j] = node;//aggiungo singolo nodo
                     }
 
                     svm_node finalNode = new svm_node();
                     finalNode.index = -1;
                     finalNode.value = 0;
 
-                    testData[i][totalNumberOfFeatures] = finalNode;
+                    testData[i][totalNumberOfFeatures] = finalNode;//aggiungo nodo finale
                 }
 
-                //testData = readTestDataFromFormatFile(storeDir + "/testDataFormatMJ1" + numberOfTest + ".txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
-
-                //testData = readTestDataFromFormatFile(storeDir + "/Jacopo21.txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
-
-                testData = readTestDataFromFormatFile(path + "/CC1.txt",numberOfFramesPerSpeaker,totalNumberOfFeatures);
-
-                ArrayList<ArrayList<Double>> resultsList = new ArrayList<>();
+                ArrayList<ArrayList<Double>> resultsList = new ArrayList<>();//lista con tante liste quanti speakers
+                                                                             // -> ciascuna lista contiene il risultato
+                                                                             //del predict dell i-esimo frame di test
 
                 double res;
                 svm_model loadedModel;
 
-                for(int j = 0; j< numberOfTrainingSpeakers; j++) {
+                for(int j = 0; j< numberOfTrainingSpeakers; j++) {//per ogni parlatore ammesso
 
                     int speaker = j + 1;
-                    resultsList.add(j,new ArrayList<Double>());
+                    resultsList.add(j,new ArrayList<Double>());//aggiungo una nuova lista per i risultati del predict con il suo specifico modello
 
-                    loadedModel = svm.svm_load_model(new BufferedReader(new FileReader(path + "/modelMultiSpeaker" + String.valueOf(speaker) + ".txt")));
-                    matlabModelToAndroidModel(loadedModel);
+                    loadedModel = svm.svm_load_model(new BufferedReader(new FileReader(path + "/modelMultiSpeaker" + String.valueOf(speaker) + ".txt")));//carico il suo modello
+                    matlabModelToAndroidModel(loadedModel);//conversione modello caricato in un formato adatto per android
 
-                    scaledTestData = scaleTestData(testData,speaker,path,1);
+                    scaledTestData = scaleTestData(testData,speaker,path,1);//scalo i dati di test con i valori di scalamento del suo modello
 
-                    for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
+                    for (int i = 0; i < numberOfFramesPerSpeaker; i++) {//per ogni frame di test scalato
 
-                        res = svm.svm_predict(loadedModel,scaledTestData[i]);
-                        resultsList.get(j).add(i, res);
+                        res = svm.svm_predict(loadedModel,scaledTestData[i]);//predizione tramite svm
+                        resultsList.get(j).add(i, res);//aggiungo predizione alla lista dei risultati
                     }
                 }
 
@@ -226,9 +217,9 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
                 int speaker = - 1;
                 int frequencyForList = 0;
 
-                ArrayList<Integer> frequencies = new ArrayList<>();
+                ArrayList<Integer> frequencies = new ArrayList<>();//lista contenente il numero di corrispondenze dei frame per ogni modello
 
-                for(int i = 0; i< resultsList.size(); i++){
+                for(int i = 0; i< resultsList.size(); i++){//calcolo il numero di uni (corrispondenze) presenti nella lista risultato
 
                     frequencyForList = Collections.frequency(resultsList.get(i), new Double(1));
 
@@ -236,18 +227,18 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
                 }
 
-                ArrayList<String> names = new ArrayList<>();
+                ArrayList<String> names = new ArrayList<>();//nomi dei parlatori ammessi da stampare a schermo
                 names.add(0, "Speaker One MB");
                 names.add(1,"Speaker Two MJ");
                 names.add(2,"Speaker Three MT");
 
-                ArrayList<Double> percentages = new ArrayList<>();
+                ArrayList<Double> percentages = new ArrayList<>();//percentuali di decisione per ogni speaker
                 percentages.add(0,0.8);
                 percentages.add(1,0.8);
                 percentages.add(2,0.9);
 
 
-                ArrayList<Double> relativeFrequencies = new ArrayList<>();
+                ArrayList<Double> relativeFrequencies = new ArrayList<>();//numero di corrispondenze oltre la soglia di decisione per ogni speaker
                 ArrayList<Double> relativeFrequenciesCopy = new ArrayList<>();
 
                 for(int i=0; i< numberOfTrainingSpeakers; i++)
@@ -256,7 +247,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
                     relativeFrequenciesCopy.add(i,frequencies.get(i)- percentages.get(i)*numberOfFramesPerSpeaker);
                 }
 
-                Collections.sort(relativeFrequenciesCopy,Collections.<Double>reverseOrder());
+                Collections.sort(relativeFrequenciesCopy,Collections.<Double>reverseOrder());//riordino la lista sulla base del maggior numero di corrispondenze oltre la soglia
 
                 /**/
 
@@ -264,13 +255,13 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
                 int recogSpeaker = -1;
 
-                for(int j = 0; j< numberOfTrainingSpeakers; j++)
+                for(int j = 0; j< numberOfTrainingSpeakers; j++)//partendo dallo speaker con più corrispondenze rispetto alla soglia
+                                                                //verifico se il numero delle corrispondenze è sufficiente
                 {
                     speaker = relativeFrequencies.indexOf(relativeFrequenciesCopy.get(j)) + 1;
 
-                    if(frequencies.get(j) > percentages.get(speaker -1)*numberOfFramesPerSpeaker)
+                    if(frequencies.get(speaker-1/*j*/) > percentages.get(speaker -1)*numberOfFramesPerSpeaker)
                     {
-                        //recognizedSpeaker = names.get(speaker - 1) + " for " + String.valueOf(relativeFrequenciesCopy.get(j)) + " frames";
                         recogSpeaker = j + 1;
                         break;
                     }
@@ -278,29 +269,33 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
                 }
 
 
-                if(recogSpeaker != -1)
+                if(recogSpeaker != -1)//se uno degli speaker è stato riconosciuto dalla svm multi class lo testo anche con il one class
                 {
-                    svm_model oneClassModel = svm.svm_load_model(path + "/modelOneSpeaker" + String.valueOf(recogSpeaker) + ".txt");
+                    svm_model oneClassModel = svm.svm_load_model(path + "/modelOneSpeaker" + String.valueOf(recogSpeaker) + ".txt");//carico modello one class dello speaker riconosciuto
                     matlabModelToAndroidModel(oneClassModel);
 
                     double predictedLabel = 0;
                     int count = 0;
 
-                    ArrayList<Double> oneClassThr = new ArrayList<>();
+                    ArrayList<Double> oneClassThr = new ArrayList<>();//thresholds per il caso one class
                     oneClassThr.add(0, 0.05);
                     oneClassThr.add(1, 0.08);
 
 
-                    scaledTestData = scaleTestData(testData,recogSpeaker,path,0);
+                    scaledTestData = scaleTestData(testData,recogSpeaker,path,0);//scalo i dati di test questa volta
+                                                                                           //con i valori di normalizzazione usati per la
+                                                                                           //creazione del modello one class
 
                     for (int i = 0; i < numberOfFramesPerSpeaker; i++) {
                         predictedLabel = svm.svm_predict(oneClassModel, scaledTestData[i]);
                         if (predictedLabel == 1) {
-                            count++;
+                            count++;//conto le corrispondenze trovate
                         }
                     }
 
-                    if (((double) count) / numberOfFramesPerSpeaker >= oneClassThr.get(recogSpeaker - 1)) {
+                    if (((double) count) / numberOfFramesPerSpeaker >= oneClassThr.get(recogSpeaker - 1)) {//se il numero supera la soglia definita per
+                                                                                                           //il modello one class allora si tratta effettivamente
+                                                                                                           //di quel parlatore
                         recognizedSpeaker = names.get(recogSpeaker-1) + "for " + String.valueOf(relativeFrequencies.get(recogSpeaker-1) + " frames in multi and " + String.valueOf(count-oneClassThr.get(recogSpeaker-1)*numberOfFramesPerSpeaker) + " frames in oneC");
                     }
                     else
@@ -314,7 +309,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
             }
             catch (IOException exception) {
-                Log.e("Speaker Recognition", "Error while loading models");
+                Log.e(TAG, "Error while loading models");
                 return null;
             }
 
@@ -326,7 +321,6 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
     protected void onPostExecute(String recognizedSpeaker) {
         super.onPostExecute(recognizedSpeaker);
 
-        //Toast.makeText(context,recognizedSpeaker,Toast.LENGTH_LONG).show();
-        textView.setText(recognizedSpeaker);
+        textView.setText(recognizedSpeaker);//stampo il nome del parlatore riconosciuto
     }
 }

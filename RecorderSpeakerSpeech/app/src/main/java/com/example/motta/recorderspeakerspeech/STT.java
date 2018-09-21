@@ -25,9 +25,12 @@ public class STT extends AsyncTask<String, String, Void> {
 
     private List<SpeechRecognitionAlternative> alternatives = null;
     private static final String TAG = "STT";
+    String expectedPhrase = "my voice is my password open the door";//frase di accesso prestabilita
+
+
     private Context mContext = null;
-    private boolean result = false;
-    private String recognizedPhrase = null;
+    private boolean result = false;//dice se la frase è stata riconosciuta o meno
+    private String recognizedPhrase = null;//frase riconosciuta
     private TextView textView = null;
 
     public STT(Context context, TextView _textView)
@@ -67,30 +70,17 @@ public class STT extends AsyncTask<String, String, Void> {
                 public void onTranscription(SpeechRecognitionResults transcript) {
                     System.out.println(transcript);
 
-                    /*
-                    boolean result = false;
-
-                    for(int i =0; i< transcript.getResults().size(); i++)
-                    {
-                        temp = transcript.getResults().get(i).toString();
-                        if(temp.contains("open the door please")){
-                            result = true;
-                        }
-                    }
-                    */
-
                     alternatives = transcript.getResults().get(0).getAlternatives();
 
                 }
             });
-            //delay 10 sec
-            Thread.currentThread().sleep(10000);
 
-            String expectedPhrase = "my voice is my password open the door";
+            Thread.currentThread().sleep(10000);//10 secondi per attendere il risultato del servizio
 
 
-            result = SupportFunctions.verifyPhrase(alternatives,expectedPhrase);
-            recognizedPhrase = SupportFunctions.recognizedPhrase(alternatives,expectedPhrase,result);
+            result = SupportFunctions.verifyPhrase(alternatives,expectedPhrase);//verifico se la frase è corretta
+            recognizedPhrase = SupportFunctions.recognizedPhrase(alternatives,expectedPhrase,result);//ottengo la frase riconosciuta
+
         }
         catch (FileNotFoundException e){
             Log.e(TAG,"File not found");
@@ -104,13 +94,13 @@ public class STT extends AsyncTask<String, String, Void> {
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
 
-        if(result) {
-            //Toast.makeText(mContext, "Succeeded: " + recognizedPhrase, Toast.LENGTH_LONG).show();
-            textView.setText("Succeeded: " + recognizedPhrase);
+        if(result) {//se la frase è stata riconosciuta
+            textView.setText("Succeeded: " + recognizedPhrase);//stampo testo che indica il successo del riconoscimento e la frase
+                                                               //che è stata riconosciuta come corretta
         }
-        else{
-            //Toast.makeText(mContext, "Failed: " + recognizedPhrase, Toast.LENGTH_LONG).show();
-            textView.setText("Failed: " + recognizedPhrase);
+        else{//se la frase non è stata riconosciuta
+            textView.setText("Failed: " + recognizedPhrase);//stampo testo che indica il fallimento del riconoscimento e la frase
+                                                            //che è non è stata riconosciuta come corretta
         }
     }
 }
