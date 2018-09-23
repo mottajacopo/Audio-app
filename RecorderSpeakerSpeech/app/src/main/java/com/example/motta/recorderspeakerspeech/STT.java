@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,11 +31,13 @@ public class STT extends AsyncTask<String, String, Void> {
     private boolean result = false;//dice se la frase è stata riconosciuta o meno
     private String recognizedPhrase = null;//frase riconosciuta
     private TextView textView = null;
+    private CheckBox checkSpeech = null;
 
-    public STT(Context context, TextView _textView)
+    public STT(Context context, TextView _textView, CheckBox _checkSpeech)
     {
         mContext = context;
         textView = _textView;
+        checkSpeech = _checkSpeech;
     }
 
     @Override
@@ -94,11 +97,12 @@ public class STT extends AsyncTask<String, String, Void> {
         super.onPostExecute(aVoid);
 
         if(result) {//se la frase è stata riconosciuta
-            textView.setText("Succeeded: " + recognizedPhrase);//stampo testo che indica il successo del riconoscimento e la frase
+            textView.setText("Succeeded, recognized phrase: " + recognizedPhrase);//stampo testo che indica il successo del riconoscimento e la frase
                                                                //che è stata riconosciuta come corretta
+            checkSpeech.setChecked(true);
         }
         else{//se la frase non è stata riconosciuta
-            textView.setText("Failed: " + recognizedPhrase);//stampo testo che indica il fallimento del riconoscimento e la frase
+            textView.setText("Failed, recognized phrase: " + recognizedPhrase);//stampo testo che indica il fallimento del riconoscimento e la frase
                                                             //che è non è stata riconosciuta come corretta
         }
     }

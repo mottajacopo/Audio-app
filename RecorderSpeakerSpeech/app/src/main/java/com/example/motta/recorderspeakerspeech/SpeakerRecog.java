@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Environment;
 
 import android.util.Log;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,8 +42,9 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
     private int nSamples = 0;
     private int nSamplesPerFrame = 0;
     private TextView textView = null;
+    private CheckBox checkSpeaker = null;
 
-    public SpeakerRecog(Context _context, int _Fs, int _recordingLengthInSec, TextView _textView)
+    public SpeakerRecog(Context _context, int _Fs, int _recordingLengthInSec, TextView _textView, CheckBox _checkSpeaker)
     {
         context = _context;
         Fs = _Fs;
@@ -54,6 +56,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
         samples = new short[nSamples];
 
         textView = _textView;
+        checkSpeaker = _checkSpeaker;
     }
 
 
@@ -246,7 +249,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
                 /**/
 
-                String recognizedSpeaker = "Unknown" + ", not speaker" + String.valueOf(relativeFrequencies.indexOf(relativeFrequenciesCopy.get(0)) + 1) + " for " + String.valueOf(-relativeFrequenciesCopy.get(0)) + " frames in multi";
+                String recognizedSpeaker = "Unknown";//+ ", not speaker" + String.valueOf(relativeFrequencies.indexOf(relativeFrequenciesCopy.get(0)) + 1) + " for " + String.valueOf(-relativeFrequenciesCopy.get(0)) + " frames in multi";
 
                 int recogSpeaker = -1;
 
@@ -291,11 +294,11 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
                     if (((double) count) / numberOfFramesPerSpeaker >= oneClassThr.get(recogSpeaker - 1)) {//se il numero supera la soglia definita per
                                                                                                            //il modello one class allora si tratta effettivamente
                                                                                                            //di quel parlatore
-                        recognizedSpeaker = names.get(recogSpeaker-1) + "for " + String.valueOf(relativeFrequencies.get(recogSpeaker-1) + " frames in multi and " + String.valueOf(count-oneClassThr.get(recogSpeaker-1)*numberOfFramesPerSpeaker) + " frames in oneC");
+                        recognizedSpeaker = "Recognized " + names.get(recogSpeaker-1);//+ "for " + String.valueOf(relativeFrequencies.get(recogSpeaker-1) + " frames in multi and " + String.valueOf(count-oneClassThr.get(recogSpeaker-1)*numberOfFramesPerSpeaker) + " frames in oneC");
                     }
                     else
                     {
-                        recognizedSpeaker = "Unknown, not speaker " + String.valueOf(recogSpeaker) + " for " + String.valueOf(oneClassThr.get(recogSpeaker-1)*numberOfFramesPerSpeaker-count) + " frames in oneC";
+                        recognizedSpeaker = "Unknown";//"Unknown, not speaker " + String.valueOf(recogSpeaker) + " for " + String.valueOf(oneClassThr.get(recogSpeaker-1)*numberOfFramesPerSpeaker-count) + " frames in oneC";
                     }
                 }
 
@@ -317,5 +320,6 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
         super.onPostExecute(recognizedSpeaker);
 
         textView.setText(recognizedSpeaker);//stampo il nome del parlatore riconosciuto
+        checkSpeaker.setChecked(true);
     }
 }
