@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
     private final String PATH = "Audio recognition files multi";//nome cartella contenente tutti i file per speaker e speech recog.
     private final String FILENAME = "rec.wav";//nome file .wav
 
-    private final int Fs = 8000;//frequenza di campionamento
+    private final int Fs = 44000;//frequenza di campionamento
     private final int recordingLength = 3;//lunghezza registraz. in secondi
 
 

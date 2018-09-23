@@ -106,30 +106,27 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 //framing audio data
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        ArrayList<float[]> floatSamplesPerFrame = new ArrayList<>();//lista contenete i frame
+        ArrayList<float[]> floatSamplesPerFrame = new ArrayList<>();
 
-        int samplesBack = 0;//per il primo frame (da 0 a nSamplesPerFrame campioni) non devo realizzare overlapping con il frame precedente
-
-        while (nSamples - nSamplesAlreadyProcessed >= nSamplesPerFrame-nSamplesOverlapped) { //dato l'overlapping per ogni frame avanzo di nSamplesPerFrame-nSamplesOverlapped frames
+        while (nSamples - nSamplesAlreadyProcessed >= nSamplesPerFrame-nSamplesOverlapped) {//dato l'overlapping per ogni frame avanzo di nSamplesPerFrame-nSamplesOverlapped frames
 
             float[] frame = new float[nSamplesPerFrame];
 
+            for (int i = 0; i < nSamplesPerFrame; i++) {//riempio il nuovo frame
 
-            for (int i = 0; i < nSamplesPerFrame; i++) {
 
-                frame[i] = samples[i + nSamplesAlreadyProcessed - samplesBack];
+                frame[i] = samples[i + nSamplesAlreadyProcessed -(nSamplesOverlapped*(nSamplesAlreadyProcessed/nSamplesPerFrame))];//la sovrapposizione è considerata solo dopo il primo frame
+                                                                                                                                   // -> per il primo frame non posso considerare campioni da quello precedente
             }
-
 
             floatSamplesPerFrame.add(frame);
 
             if(nSamplesAlreadyProcessed == 0) {//se sono al primo frame
 
-                nSamplesAlreadyProcessed = nSamplesPerFrame;//i nuovi campioni considerati sono nSamplesPerFrame
-                samplesBack = nSamplesOverlapped;//i frame successivi al primo possono considerare nSamplesOverlapped campioni dal frame precedente
+                nSamplesAlreadyProcessed = nSamplesPerFrame;//i nuovi campioni inseriti nel frame sono nSamplesPerFrame
             }
-            else {
-                nSamplesAlreadyProcessed += nSamplesPerFrame-nSamplesOverlapped;//negli altri casi i nuovi campioni sono nSamplesPerFrame-nSamplesOverlapped
+            else {//se non sono nel primo frame ho overlapping con i campioni del frame precedente
+                nSamplesAlreadyProcessed += nSamplesPerFrame-nSamplesOverlapped;//i nuovi campioni considerati sono solo nSamplesPerFrame - nSamplesOverlapped
             }
         }
 
@@ -262,7 +259,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
                     if(frequencies.get(speaker-1/*j*/) > percentages.get(speaker -1)*numberOfFramesPerSpeaker)
                     {
-                        recogSpeaker = j + 1;
+                        recogSpeaker = speaker/*j + 1*/;
                         break;
                     }
 
