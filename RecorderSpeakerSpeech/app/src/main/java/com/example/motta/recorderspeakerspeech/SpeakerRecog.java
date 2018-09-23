@@ -24,7 +24,6 @@ import libsvm.svm_node;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.computeDeltas;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.convertFloatsToDoubles;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.matlabModelToAndroidModel;
-import static com.example.motta.recorderspeakerspeech.SupportFunctions.readTestDataFromFormatFile;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.scaleTestData;
 import static com.example.motta.recorderspeakerspeech.SupportFunctions.uniteAllFeaturesInOneList;
 
@@ -113,8 +112,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
 
             for (int i = 0; i < nSamplesPerFrame; i++) {//riempio il nuovo frame
 
-
-                frame[i] = samples[i + nSamplesAlreadyProcessed -(nSamplesOverlapped*(nSamplesAlreadyProcessed/nSamplesPerFrame))];//la sovrapposizione è considerata solo dopo il primo frame
+                frame[i] = samples[i + nSamplesAlreadyProcessed -(80*(nSamplesAlreadyProcessed/nSamplesPerFrame))];//la sovrapposizione è considerata solo dopo il primo frame
                                                                                                                                    // -> per il primo frame non posso considerare campioni da quello precedente
             }
 
@@ -141,7 +139,7 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
         MFCC mfcc = new MFCC(nSamplesPerFrame,Fs,13,30, 133.3334f, ((float)Fs)/2f);
 
         for(int j =0; j< floatSamplesPerFrame.size(); j++){
-
+            float[] d = floatSamplesPerFrame.get(j);
             ae.setFloatBuffer(floatSamplesPerFrame.get(j));//metto nel buffer di ae un blocco di campioni alla volta (singoli frame)
             mfcc.process(ae);//calcolo mfcc sul singolo frame
 

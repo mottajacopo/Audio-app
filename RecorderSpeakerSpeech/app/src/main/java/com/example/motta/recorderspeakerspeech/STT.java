@@ -25,8 +25,6 @@ public class STT extends AsyncTask<String, String, Void> {
 
     private List<SpeechRecognitionAlternative> alternatives = null;
     private static final String TAG = "STT";
-    String expectedPhrase = "my voice is my password open the door";//frase di accesso prestabilita
-
 
     private Context mContext = null;
     private boolean result = false;//dice se la frase è stata riconosciuta o meno
@@ -77,6 +75,7 @@ public class STT extends AsyncTask<String, String, Void> {
 
             Thread.currentThread().sleep(10000);//10 secondi per attendere il risultato del servizio
 
+            String expectedPhrase = mContext.getString(R.string.correctPhrase);//recupero la frase di accesso prestabilita
 
             result = SupportFunctions.verifyPhrase(alternatives,expectedPhrase);//verifico se la frase è corretta
             recognizedPhrase = SupportFunctions.recognizedPhrase(alternatives,expectedPhrase,result);//ottengo la frase riconosciuta

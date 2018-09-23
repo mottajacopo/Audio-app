@@ -4,4 +4,5 @@
     <string name="password">1lvt77qALCoa</string>
     <string name="url">https://stream.watsonplatform.net/speech-to-text/api</string>
     <string name="check_phrase">open the door please</string>
+    <string name="correctPhrase">my voice is my password open the door</string>
 </resources>
