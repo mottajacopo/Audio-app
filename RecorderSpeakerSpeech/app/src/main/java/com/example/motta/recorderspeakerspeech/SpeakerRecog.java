@@ -87,7 +87,6 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
             return null;//se è stata generata l'eccezione esco dal doInBackground
         }
 
-
         short value = 0;
 
         for(int i = 0;  i < nSamples; i++)//ricostruisco i campioni originali a partire dai byte salvati nel file .wav
@@ -186,10 +185,11 @@ public class SpeakerRecog extends AsyncTask<String,Void,String> {
                     testData[i][totalNumberOfFeatures] = finalNode;//aggiungo nodo finale
                 }
 
+
+
                 ArrayList<ArrayList<Double>> resultsList = new ArrayList<>();//lista con tante liste quanti speakers
                                                                              // -> ciascuna lista contiene il risultato
                                                                              //del predict dell i-esimo frame di test
-
                 double res;
                 svm_model loadedModel;
 
